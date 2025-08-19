@@ -17,7 +17,7 @@ mkdir -p ./build
 case $1 in
   build )
     # Clean previous builds
-    rm -f build/chatctl
+    rm -f ./build/chatctl
 
     # Run the tests first so the binary wont build if tests fail
     echo "Running ChatWrapper tests"
@@ -32,7 +32,7 @@ case $1 in
     ;;
   build-testless )
     # Clean previous builds
-    rm -f build/chatctl
+    rm -f ./build/chatctl
 
     echo "Building ChatWrapper Binary"
     GOOS=linux GOARCH=amd64 go build -o build/chatctl .
@@ -40,7 +40,7 @@ case $1 in
     ;;
   release-build )
     # Clean previous builds
-    rm -f build/chatctl.exe build/chatctl-linux
+    rm -f ./build/chatctl.exe build/chatctl-linux
 
     # Run the tests first so the binary wont build if tests fail
     echo "Running ChatWrapper tests"
