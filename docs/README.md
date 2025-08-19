@@ -7,10 +7,23 @@ General gameplan is to focus on creating documents that help build the initial t
 ## Table of Contents
 
 - [Foundational Documents](#1-foundational-documents)
+  - [Vision & Mission Statement](./1-foundational-docs/1-vision-and-mission-statement.md)
+  - [Feature Set](./1-foundational-docs/2-feature-set.md)
 - [Architecture & System Design Docs](#2-architecture--system-design-docs)
+  - [Block Diagram](./2-architecture-and-system-design/block-diagram.md)
+  - [CLI Command Mockup](./2-architecture-and-system-design/cli-command-mockup.md)
+  - [Data Flow Diagram](./2-architecture-and-system-design/data-flow-diagram.md)
+  - [Storage Strategy](./2-architecture-and-system-design/storage-strategy.md)
+  - [Security Model](./2-architecture-and-system-design/security-model.md)
 - [MVP Definition](#3-mvp-definition)
+  - [CLI MVP Features](./3-mvp-definition/1-cli-mvp-features.md)
+  - [UX Proof-of-Concept](./3-mvp-definition/2-ux-proof-of-concept.md)
+  - [SaaS MVP](./3-mvp-definition/3-saas-mvp.md)
 - [Feature Evolution Roadmap](#4-feature-evolution-roadmap)
 - [Monetization Strategy Docs](#5-monetization-strategy-docs)
+  - [Free vs Paid](./5-monetization-strategy-docs/1-free-vs-paid.md)
+  - [Pricing Model](./5-monetization-strategy-docs/2-pricing-model.md)
+  - [Differentiators](./5-monetization-strategy-docs/3-differentiators.md)
 - [UI/UX Design Docs](#6-uiux-design-docs)
 - [Operations Docs](#7-operations-docs)
 - [Community & Growth Docs](#8-community--growth-docs)
@@ -34,21 +47,25 @@ These define the _core vision_ and should keep scope tight.
 
 These documents should define the _technical_ implementation, challenges and solutions in creating and deploying the product.
 
-- **Block Diagram**
+- [**Block Diagram**](./2-architecture-and-system-design/block-diagram.md)
 
   - Core components: CLI, local store, sync layer, SaaS backend, UI frontend.
 
-- **Data Flow Diagram (DFD)**
+- [**CLI Command Mockup**](./2-architecture-and-system-design/cli-command-mockup.md)
+
+  - Expected CLI commands and how they are to be used in the tool.
+
+- [**Data Flow Diagram (DFD)**](./2-architecture-and-system-design/data-flow-diagram.md)
 
   - How chats, commits, notes, and merges move through the system.
   - Where pre-commit hooks inject context.
 
-- **Storage Strategy**
+- [**Storage Strategy**](./2-architecture-and-system-design/storage-strategy.md)
 
   - Local (SQLite, file system, Obsidian-like markdown vaults).
   - SaaS (Postgres, S3, encrypted doc store).
 
-- **Security Model**
+- [**Security Model**](./2-architecture-and-system-design/security-model.md)
 
   - Auth (FOSS: local keys, SaaS: OAuth + JWT).
   - Privacy (user owns data, encrypted at rest).
