@@ -6,14 +6,16 @@ General gameplan is to focus on creating documents that help build the initial t
 
 ## Table of Contents
 
-[Foundational Documents](#1-foundational-documents)
+[[_TOC_]]
+
+<!-- [Foundational Documents](#1-foundational-documents)
 [Architecture & System Design Docs](#2-architecture--system-design-docs)
 [MVP Definition](#3-mvp-definition)
 [Feature Evolution Roadmap](#4-feature-evolution-roadmap)
 [Monetization Strategy Docs](#5-monetization-strategy-docs)
 [UI/UX Design Docs](#6-uiux-design-docs)
 [Operations Docs](#7-operations-docs)
-[Community & Growth Docs](#8-community--growth-docs)
+[Community & Growth Docs](#8-community--growth-docs) -->
 
 ## 1. **Foundational Documents**
 
