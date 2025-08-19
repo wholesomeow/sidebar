@@ -6,13 +6,15 @@ Logos and cool gifs of it being used like all the cool repos do.
 
 placeholder
 
-[[TOC]]
+## Table of Contents
+
+[Elevator Pitch](#elevator-pitch)
+[Features](#features)
+[Installation](#installation)
+[Usage](#usage)
+[Configuration](#configuration)
 
 ## Features
-
-placeholder
-
-## Tutorials
 
 placeholder
 

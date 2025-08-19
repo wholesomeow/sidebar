@@ -2,7 +2,18 @@
 
 Here are all the documents that have been generated during the development of Chat Wrapper (final name TBD). This serves as the landing page for people looking to understand the product more.
 
-[[TOC]]
+General gameplan is to focus on creating documents that help build the initial toolset, then build the actual toolset. Documents for later use (like Operations Docs) exist as a placeholder to be filled out later on; a stepping stone that is outlined, but doesn't need to be placed yet. Some documents (like Monetization and Feature Evolution) exist to serve as a guiding point to ensure that what is being built will be built with long-term goals in mind and can exist loosely or as stubs.
+
+## Table of Contents
+
+[Foundational Documents](#1-foundational-documents)
+[Architecture & System Design Docs](#2-architecture--system-design-docs)
+[MVP Definition](#3-mvp-definition)
+[Feature Evolution Roadmap](#4-feature-evolution-roadmap)
+[Monetization Strategy Docs](#5-monetization-strategy-docs)
+[UI/UX Design Docs](#6-uiux-design-docs)
+[Operations Docs](#7-operations-docs)
+[Community & Growth Docs](#8-community--growth-docs)
 
 ## 1. **Foundational Documents**
 
