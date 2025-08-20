@@ -24,7 +24,7 @@ Core Commands:
 
   Commits:
     log                                    Show commit history for the current session
-    msg "<message>"                        Add a new message to the current chat
+    msg "<message>"                        Commit a new message to the current chat
     diff <commitA> <commitB>               Show differences between two commits
 
   Branches:
