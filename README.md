@@ -1,4 +1,4 @@
-# Chat Wrapper (name TBD)
+# Sidebar
 
 Logos and cool gifs of it being used like all the cool repos do.
 

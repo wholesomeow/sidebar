@@ -17,7 +17,7 @@ mkdir -p ./build
 case $1 in
   build )
     # Clean previous builds
-    rm -f ./build/chatctl
+    rm -f ./build/sidebar
 
     # Run the tests first so the binary wont build if tests fail
     echo "Running ChatWrapper tests"
@@ -26,21 +26,21 @@ case $1 in
     echo "Will implement test-scripts soon... link to test-scripts here: https://bitfieldconsulting.com/posts/test-scripts"
 
     echo "Building ChatWrapper Binary"
-    GOOS=linux GOARCH=amd64 go build -o build/chatctl .
-    chmod +x build/chatctl
-    echo "Binary built at: build/chatctl"
+    GOOS=linux GOARCH=amd64 go build -o build/sidebar .
+    chmod +x build/sidebar
+    echo "Binary built at: build/sidebar"
     ;;
   build-testless )
     # Clean previous builds
-    rm -f ./build/chatctl
+    rm -f ./build/sidebar
 
     echo "Building ChatWrapper Binary"
-    GOOS=linux GOARCH=amd64 go build -o build/chatctl .
-    echo "Binary built at: build/chatctl"
+    GOOS=linux GOARCH=amd64 go build -o build/sidebar .
+    echo "Binary built at: build/sidebar"
     ;;
   release-build )
     # Clean previous builds
-    rm -f ./build/chatctl.exe build/chatctl-linux
+    rm -f ./build/sidebar.exe build/sidebar-linux
 
     # Run the tests first so the binary wont build if tests fail
     echo "Running ChatWrapper tests"
@@ -58,18 +58,18 @@ case $1 in
     go build -ldflags="-X main.version=$VERSION -X main.commit=$COMMIT -X main.buildTime=$BUILD_TIME"
 
     # Linux 64-bit
-    GOOS=linux GOARCH=amd64 go build -o build/chatctl-linux
-    chmod +x build/chatctl-linux
-    echo "Binary built at: build/chatctl-linux"
+    GOOS=linux GOARCH=amd64 go build -o build/sidebar-linux
+    chmod +x build/sidebar-linux
+    echo "Binary built at: build/sidebar-linux"
 
     # Windows 64-bit
-    GOOS=windows GOARCH=amd64 go build -o build/chatctl.exe
-    chmod +x build/chatctl.exe
-    echo "Binary built at: build/chatctl.exe"
+    GOOS=windows GOARCH=amd64 go build -o build/sidebar.exe
+    chmod +x build/sidebar.exe
+    echo "Binary built at: build/sidebar.exe"
 
     echo "Compressing builds..."
-    zip build/chatctl-linux.zip build/chatctl-linux
-    zip build/chatctl-windows.zip build/chatctl.exe
+    zip build/sidebar-linux.zip build/sidebar-linux
+    zip build/sidebar-windows.zip build/sidebar.exe
     ;;
   
 esac

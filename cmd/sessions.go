@@ -7,7 +7,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func chatctlSessions(sessionID string) string {
+// List all sessions you have with chatbot
+func sidebarSessions(sessionID string) string {
 	return fmt.Sprintf("Session %s resumed\n", sessionID)
 }
 
@@ -15,7 +16,7 @@ var sessionSessionsCmd = &cobra.Command{
 	Use:  "archive",
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Fprint(os.Stdout, chatctlSessions(args[0]))
+		fmt.Fprint(os.Stdout, sidebarSessions(args[0]))
 	},
 }
 

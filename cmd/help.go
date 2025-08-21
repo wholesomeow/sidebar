@@ -7,11 +7,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var helpMsg = `chatctl — Chat Version Control CLI
+var helpMsg = `sidebar — Chat Version Control CLI
 Manage AI-assisted conversations with sessions, commits, branches, tangents, and exports.
 
 Usage:
-  chatctl <command> [options]
+  sidebar <command> [options]
 
 Core Commands:
 
@@ -50,13 +50,13 @@ Core Commands:
     export <message-id> <doc-title>        Export a message to Markdown
 
 Options:
-  help                                     Show help for chatctl or a specific command
+  help                                     Show help for sidebar or a specific command
   version                                  Show version information`
 
 var helpCmd = &cobra.Command{
 	Use:   "help",
-	Short: "displays chatctl help",
-	Long:  "Show help for chatctl or a specific command",
+	Short: "displays sidebar help",
+	Long:  "Show help for sidebar or a specific command",
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Fprint(os.Stdout, helpMsg)
 	},
