@@ -33,4 +33,4 @@ go.work.sum
 
 # application specific ignores
 build/
-.chatctl/
+.sidebar/

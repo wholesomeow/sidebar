@@ -9,7 +9,7 @@ import (
 
 // List all sessions you have with chatbot
 func sidebarSessions(sessionID string) string {
-	return fmt.Sprintf("Session %s resumed\n", sessionID)
+	return fmt.Sprintf("Session %s resumed... not fully implemented\n", sessionID)
 }
 
 var sessionSessionsCmd = &cobra.Command{
