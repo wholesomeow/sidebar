@@ -82,7 +82,11 @@ var rootCmd = &cobra.Command{
 			}
 
 			// Check for the API Key again and display it
-			fmt.Fprintf(os.Stdout, "API Key: %s\n", os.Getenv("OPENAI_API_KEY"))
+			apiKey = os.Getenv("OPENAI_API_KEY")
+			apiKeyPrefix := apiKey[:3]
+			apiKeySuffix := apiKey[len(apiKey)-4 : len(apiKey)-1]
+			displayKey := fmt.Sprintf("%s...%s", apiKeyPrefix, apiKeySuffix)
+			fmt.Fprintf(os.Stdout, "API Key: %s\n", displayKey)
 		}
 	},
 }
