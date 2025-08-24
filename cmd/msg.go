@@ -10,8 +10,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var sessionInitCmd = &cobra.Command{
-	Use:  "init",
+var sessionMsgCmd = &cobra.Command{
+	Use:  "msg",
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Initialize the OpenAI client
@@ -25,45 +25,11 @@ var sessionInitCmd = &cobra.Command{
 		)
 
 		var seed int64 = 1
-		topic := args[0]
-
-		conversationID, err := CreateUUIDv4()
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error creating converstaionID: %s\n", err)
-		}
-
-		// Create new conversation file
-		path := "./.sidebar"
-		_, err = os.Stat(path)
-		if os.IsNotExist(err) {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			os.Exit(1)
-		}
-
-		// Copy convo.yaml template into directory
-		sourceFilePath := "templates/convo.yaml"
-		err = CopyFile(sourceFilePath, path)
-		if err != nil {
-			fmt.Printf("Error copying file: %v\n", err)
-		}
-
-		// Write initial data to convo file
-
-		// Intentionally cursed formatting
-		fmt.Printf(`
-	                *** New Session initiated ***
-*** To respond back to the assistant, use sidebar msg "your response" ***
-
-- Conversation ID: %s
-- Seed: %d
-- Topic: %s
-
-`,
-			conversationID, seed, topic)
+		msg := args[0]
 
 		param := openai.ChatCompletionNewParams{
 			Messages: []openai.ChatCompletionMessageParamUnion{
-				openai.UserMessage(topic),
+				openai.UserMessage(msg),
 			},
 			Seed:  openai.Int(seed),      // TODO: Implement an int64 seed generator
 			Model: openai.ChatModelGPT4o, // TODO: Implement a model parameter in settings
@@ -83,5 +49,5 @@ var sessionInitCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(sessionInitCmd)
+	rootCmd.AddCommand(sessionMsgCmd)
 }

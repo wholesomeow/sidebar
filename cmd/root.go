@@ -25,7 +25,6 @@ var rootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		path := "./.sidebar"
 		sourceFilePath := "templates/sidebar-config.yaml"
-		destinationDirectory := "./.sidebar"
 
 		// Check if config directory exists already - if not create it and set permissions
 		_, err := os.Stat(path)
@@ -36,7 +35,7 @@ var rootCmd = &cobra.Command{
 			}
 
 			// Copy sidebar-config.yaml template into directory
-			err = CopyFile(sourceFilePath, destinationDirectory)
+			err = CopyFile(sourceFilePath, path)
 			if err != nil {
 				fmt.Printf("Error copying file: %v\n", err)
 			}
@@ -48,7 +47,7 @@ var rootCmd = &cobra.Command{
 		fmt.Println(welcomeMsg)
 
 		// Check if API Key exists within sidebar-config.yaml - if not, inform user
-		yamlFile := filepath.Join(destinationDirectory, "sidebar-config.yaml")
+		yamlFile := filepath.Join(path, "sidebar-config.yaml")
 		f, err := os.ReadFile(yamlFile)
 		if err != nil {
 			fmt.Printf("Error reading file %s: %v\n", yamlFile, err)

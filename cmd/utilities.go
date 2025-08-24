@@ -3,8 +3,10 @@ package cmd
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 )
@@ -81,4 +83,74 @@ func CreateUUIDv4() (string, error) {
 	encodeHex(buf[:], uuid)
 
 	return string(buf[:]), nil
+}
+
+func ReadJSON(path string) ([]byte, error) {
+	var nil_data []byte
+
+	// Open JSON File
+	log.Printf("reading %s file", path)
+	f, err := os.Open(path)
+	if err != nil {
+		return nil_data, err
+	}
+	defer f.Close()
+
+	// Read JSON File
+	byte_value, err := io.ReadAll(f)
+	if err != nil {
+		return nil_data, err
+	}
+
+	return byte_value, nil
+}
+
+func parseJSONToSlice(data interface{}) [][]string {
+	var result [][]string
+
+	// Check the type of the data and handle accordingly
+	switch v := data.(type) {
+	case map[string]interface{}:
+		// If it's a map, traverse the keys and values recursively
+		for _, value := range v {
+			// Recursively process each value in the map
+			result = append(result, parseJSONToSlice(value)...)
+		}
+
+	case []interface{}:
+		// If it's a slice, iterate through the elements and process each one
+		for _, item := range v {
+			// Recursively process each item in the slice
+			result = append(result, parseJSONToSlice(item)...)
+		}
+
+	case string:
+		// If it's a string, add it as a single-element slice
+		result = append(result, []string{v})
+
+	case float64:
+		// If it's a number, convert it to string and add it as a single-element slice
+		result = append(result, []string{fmt.Sprintf("%f", v)})
+
+	case bool:
+		// If it's a boolean, convert it to string and add it as a single-element slice
+		result = append(result, []string{fmt.Sprintf("%t", v)})
+
+	default:
+		// For any other data type, handle it by converting it to string
+		result = append(result, []string{fmt.Sprintf("%v", v)})
+	}
+
+	return result
+}
+
+func JSONToSlice(data []byte) ([][]string, error) {
+	// Use a generic map to unmarshal the JSON data
+	var temp interface{}
+	if err := json.Unmarshal(data, &temp); err != nil {
+		return nil, fmt.Errorf("error unmarshaling JSON: %w", err)
+	}
+
+	// Parse the data into a nested slice of strings
+	return parseJSONToSlice(data), nil
 }

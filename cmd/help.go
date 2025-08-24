@@ -48,6 +48,7 @@ Core Commands:
 
   Export:
     export <message-id> <doc-title>        Export a message to Markdown
+    export <conversation-id> <doc-title>   Export a conversation to Markdown
 
 Options:
   help                                     Show help for sidebar or a specific command
