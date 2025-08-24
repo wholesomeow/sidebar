@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 
@@ -91,7 +90,6 @@ func ReadJSON(path string) ([]byte, error) {
 	var nil_data []byte
 
 	// Open JSON File
-	log.Printf("reading %s file", path)
 	f, err := os.Open(path)
 	if err != nil {
 		return nil_data, err
@@ -195,4 +193,11 @@ func StructToJSON(conv Conversation) ([]byte, error) {
 		return nil, fmt.Errorf("error marshaling struct to JSON: %w", err)
 	}
 	return data, nil
+}
+
+type OpenAIError struct {
+	Message string `json:"message"`
+	Type    string `json:"type"`
+	Param   string `json:"param,omitempty"`
+	Code    string `json:"code"`
 }

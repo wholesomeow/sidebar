@@ -2,8 +2,10 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/openai/openai-go/v2"
 	"github.com/openai/openai-go/v2/option"
@@ -68,11 +70,6 @@ var sessionInitCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		// Write initial data to convo file
-		convo.ConversationID = conversationID
-		convo.Seed = int(seed)
-		convo.Topic = topic
-
 		// Intentionally cursed formatting
 		fmt.Printf(`
 	                *** New Session initiated ***
@@ -97,19 +94,68 @@ var sessionInitCmd = &cobra.Command{
 		completion, err := client.Chat.Completions.New(context.Background(), param)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error in Response: %s\n", err)
-			os.Exit(1)
-		}
+			errString := err.Error()
 
-		// Write data from the API to file
-		convo.Messages[0].MessageID, err = CreateUUIDv4() // TODO: Double-check that this isn't something returned from OpenAI already (probably is)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error creating converstaionID: %s\n", err)
-		}
-		// convo.Messages[0].Timestamp = timestamp logic lol
-		convo.Messages[0].Content = completion.Choices[0].Message.Content
-		convo.Messages[0].Param = append(convo.Messages[0].Param, completion.Choices[0].Message.ToParam())
+			// Extract only the JSON part
+			idx := strings.Index(errString, "{")
+			if idx == -1 {
+				panic("no JSON found in error string")
+			}
+			jsonPart := errString[idx:]
 
-		fmt.Fprintf(os.Stdout, "Assistant: %s\n", completion.Choices[0].Message.Content)
+			// Parse into struct
+			var errResp OpenAIError
+			if err := json.Unmarshal([]byte(jsonPart), &errResp); err != nil {
+				panic(err)
+			}
+
+			// Write data from the API to file
+			convo.ConversationID = conversationID
+			convo.Seed = int(seed)
+			convo.Topic = topic
+
+			convo.Messages[0].MessageID, err = CreateUUIDv4() // TODO: Double-check that this isn't something returned from OpenAI already (probably is)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error creating converstaionID: %s\n", err)
+			}
+			convo.Messages[0].Content = errResp.Message
+
+			// Initial file commit
+			writeData, err := StructToJSON(*convo)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error writing struct to byte array: %s\n", err)
+			}
+			err = WriteJSON(newPath, writeData)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error writing byte array to file: %s\n", err)
+			}
+		} else {
+			// Write data from the API to file
+			convo.ConversationID = conversationID
+			convo.Seed = int(seed)
+			convo.Topic = topic
+
+			convo.Messages[0].MessageID, err = CreateUUIDv4() // TODO: Double-check that this isn't something returned from OpenAI already (probably is)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error creating converstaionID: %s\n", err)
+			}
+			// convo.Messages[0].Timestamp = timestamp logic lol
+			convo.Messages[0].Content = completion.Choices[0].Message.Content
+			convo.Messages[0].Param = append(convo.Messages[0].Param, completion.Choices[0].Message.ToParam())
+
+			// Initial file commit
+			writeData, err := StructToJSON(*convo)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error writing struct to byte array: %s\n", err)
+			}
+			err = WriteJSON(newPath, writeData)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error writing byte array to file: %s\n", err)
+			}
+
+			// Print output to terminal
+			fmt.Fprintf(os.Stdout, "Assistant: %s\n", completion.Choices[0].Message.Content)
+		}
 	},
 }
 
