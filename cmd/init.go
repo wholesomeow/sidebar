@@ -90,6 +90,16 @@ var sessionInitCmd = &cobra.Command{
 			Model: openai.ChatModelGPT4o, // TODO: Implement a model parameter in settings
 		}
 
+		// Write data from the API to file
+		convo.ConversationID = conversationID
+		convo.Seed = int(seed)
+		convo.Topic = topic
+
+		convo.Messages[0].MessageID, err = CreateUUIDv4() // TODO: Double-check that this isn't something returned from OpenAI already (probably is)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error creating converstaionID: %s\n", err)
+		}
+
 		// TODO: Check out "Responses"
 		completion, err := client.Chat.Completions.New(context.Background(), param)
 		if err != nil {
@@ -110,51 +120,25 @@ var sessionInitCmd = &cobra.Command{
 			}
 
 			// Write data from the API to file
-			convo.ConversationID = conversationID
-			convo.Seed = int(seed)
-			convo.Topic = topic
-
-			convo.Messages[0].MessageID, err = CreateUUIDv4() // TODO: Double-check that this isn't something returned from OpenAI already (probably is)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error creating converstaionID: %s\n", err)
-			}
 			convo.Messages[0].Content = errResp.Message
-
-			// Initial file commit
-			writeData, err := StructToJSON(*convo)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error writing struct to byte array: %s\n", err)
-			}
-			err = WriteJSON(newPath, writeData)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error writing byte array to file: %s\n", err)
-			}
 		} else {
 			// Write data from the API to file
-			convo.ConversationID = conversationID
-			convo.Seed = int(seed)
-			convo.Topic = topic
-
-			convo.Messages[0].MessageID, err = CreateUUIDv4() // TODO: Double-check that this isn't something returned from OpenAI already (probably is)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error creating converstaionID: %s\n", err)
-			}
 			// convo.Messages[0].Timestamp = timestamp logic lol
 			convo.Messages[0].Content = completion.Choices[0].Message.Content
 			convo.Messages[0].Param = append(convo.Messages[0].Param, completion.Choices[0].Message.ToParam())
 
-			// Initial file commit
-			writeData, err := StructToJSON(*convo)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error writing struct to byte array: %s\n", err)
-			}
-			err = WriteJSON(newPath, writeData)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error writing byte array to file: %s\n", err)
-			}
-
 			// Print output to terminal
 			fmt.Fprintf(os.Stdout, "Assistant: %s\n", completion.Choices[0].Message.Content)
+		}
+
+		// Initial file commit
+		writeData, err := StructToJSON(*convo)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error writing struct to byte array: %s\n", err)
+		}
+		err = WriteJSON(newPath, writeData)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error writing byte array to file: %s\n", err)
 		}
 	},
 }
