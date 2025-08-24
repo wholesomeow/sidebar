@@ -9,6 +9,11 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+type Config struct {
+	APIKEY             string `yaml:"API_KEY"`
+	LastConversationID string `yaml:"lastConversationID"`
+}
+
 var welcomeMsg string = `
 Welcome to Sidebar!
 

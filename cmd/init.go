@@ -4,12 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/openai/openai-go/v2"
 	"github.com/openai/openai-go/v2/option"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v2"
 )
 
 var sessionInitCmd = &cobra.Command{
@@ -90,7 +93,7 @@ var sessionInitCmd = &cobra.Command{
 			Model: openai.ChatModelGPT4o, // TODO: Implement a model parameter in settings
 		}
 
-		// Write data from the API to file
+		// Collect data from the API
 		convo.ConversationID = conversationID
 		convo.Seed = int(seed)
 		convo.Topic = topic
@@ -139,6 +142,29 @@ var sessionInitCmd = &cobra.Command{
 		err = WriteJSON(newPath, writeData)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error writing byte array to file: %s\n", err)
+		}
+
+		// Update config with conversation ID
+		yamlFile := filepath.Join(path, "sidebar-config.yaml")
+		f, err := os.ReadFile(yamlFile)
+		if err != nil {
+			fmt.Printf("Error reading file %s: %v\n", yamlFile, err)
+		}
+
+		var config Config
+		err = yaml.Unmarshal([]byte(f), &config)
+		if err != nil {
+			fmt.Printf("Error unmarshaling YAML: %v\n", err)
+		}
+		config.LastConversationID = conversationID
+
+		updatedYAML, err := yaml.Marshal(&config)
+		if err != nil {
+			log.Fatalf("Error marshalling YAML: %v", err)
+		}
+		err = os.WriteFile(yamlFile, updatedYAML, 0644)
+		if err != nil {
+			log.Fatalf("Error writing updated YAML to file: %v", err)
 		}
 	},
 }
