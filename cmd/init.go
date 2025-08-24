@@ -40,23 +40,47 @@ var sessionInitCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		// Copy convo.yaml template into directory
-		sourceFilePath := "templates/convo.yaml"
+		// Copy convo.json template into directory
+		fileName := fmt.Sprintf("convo_%s.json", conversationID)
+		sourceFilePath := "templates/convo.json"
 		err = CopyFile(sourceFilePath, path)
 		if err != nil {
 			fmt.Printf("Error copying file: %v\n", err)
 		}
+		oldPath := fmt.Sprintf("%s/convo.json", path)
+		newPath := fmt.Sprintf("%s/%s", path, fileName)
+		err = os.Rename(oldPath, newPath)
+		if err != nil {
+			fmt.Printf("Error renaming file: %v\n", err)
+		}
+
+		// Read conversation file
+		jsonPath := fmt.Sprintf("%s/%s", path, fileName)
+		data, err := ReadJSON(jsonPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+
+		convo, err := JSONToStruct(data)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
 
 		// Write initial data to convo file
+		convo.ConversationID = conversationID
+		convo.Seed = int(seed)
+		convo.Topic = topic
 
 		// Intentionally cursed formatting
 		fmt.Printf(`
 	                *** New Session initiated ***
-*** To respond back to the assistant, use sidebar msg "your response" ***
+*** To respond back to the assistant, use 'sidebar msg "your response"' ***
 
-- Conversation ID: %s
-- Seed: %d
-- Topic: %s
+    - Conversation ID: %s
+    - Seed: %d
+    - Topic: %s
 
 `,
 			conversationID, seed, topic)
@@ -76,7 +100,14 @@ var sessionInitCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		param.Messages = append(param.Messages, completion.Choices[0].Message.ToParam())
+		// Write data from the API to file
+		convo.Messages[0].MessageID, err = CreateUUIDv4() // TODO: Double-check that this isn't something returned from OpenAI already (probably is)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error creating converstaionID: %s\n", err)
+		}
+		// convo.Messages[0].Timestamp = timestamp logic lol
+		convo.Messages[0].Content = completion.Choices[0].Message.Content
+		convo.Messages[0].Param = append(convo.Messages[0].Param, completion.Choices[0].Message.ToParam())
 
 		fmt.Fprintf(os.Stdout, "Assistant: %s\n", completion.Choices[0].Message.Content)
 	},

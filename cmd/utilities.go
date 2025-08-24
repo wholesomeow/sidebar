@@ -9,6 +9,8 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+
+	"github.com/openai/openai-go/v2"
 )
 
 // CopyFile copies a file from src to dst.
@@ -105,6 +107,14 @@ func ReadJSON(path string) ([]byte, error) {
 	return byte_value, nil
 }
 
+// WriteJSON writes JSON data to a file
+func WriteJSON(path string, data []byte) error {
+	if err := os.WriteFile(path, data, 0644); err != nil {
+		return fmt.Errorf("error writing JSON to file: %w", err)
+	}
+	return nil
+}
+
 func parseJSONToSlice(data interface{}) [][]string {
 	var result [][]string
 
@@ -153,4 +163,36 @@ func JSONToSlice(data []byte) ([][]string, error) {
 
 	// Parse the data into a nested slice of strings
 	return parseJSONToSlice(data), nil
+}
+
+type Message struct {
+	Timestamp string                                   `json:"timestamp"`
+	MessageID string                                   `json:"messageID"`
+	Content   string                                   `json:"content"`
+	Param     []openai.ChatCompletionMessageParamUnion `json:"param"`
+}
+
+type Conversation struct {
+	ConversationID string    `json:"conversationID"`
+	Seed           int       `json:"seed"`
+	Topic          string    `json:"topic"`
+	Messages       []Message `json:"messages"`
+}
+
+// JSONToStruct takes raw JSON bytes and unmarshals into a Conversation struct
+func JSONToStruct(data []byte) (*Conversation, error) {
+	var conv *Conversation
+	if err := json.Unmarshal(data, &conv); err != nil {
+		return nil, fmt.Errorf("error unmarshaling JSON to struct: %w", err)
+	}
+	return conv, nil
+}
+
+// StructToJSON marshals a Conversation struct back to pretty-printed JSON
+func StructToJSON(conv Conversation) ([]byte, error) {
+	data, err := json.MarshalIndent(conv, "", "  ")
+	if err != nil {
+		return nil, fmt.Errorf("error marshaling struct to JSON: %w", err)
+	}
+	return data, nil
 }
