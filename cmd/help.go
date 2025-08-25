@@ -24,8 +24,9 @@ Core Commands:
 
   Commits:
     log                                    Show commit history for the current session
-    msg "<message>"                        Commit a new message to the current chat
-    diff <commitA> <commitB>               Show differences between two commits
+    msg "<message>"                        Send a new message to the current chat
+    commit -m "<message>"                  Commit current conversation to current session
+    diff <commitA> <commitB>               Show differences between two commits or conversation branches
 
   Branches:
     branch <name> -from <commit>           Create a new branch from a commit
@@ -34,7 +35,7 @@ Core Commands:
     list branches                          List all branches
 
   Tangents:
-    tangent "<note>"                       Create a tangent (short-lived side branch)
+    tangent "<message>"                    Create a tangent (short-lived side branch)
     tangent-expand <tangent-id>            Promote tangent into a full branch
     tangent-resolve <tangent-id>           Resolve tangent and delete branch
     tangent-resolve all                    Resolve all tangents

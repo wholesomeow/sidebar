@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 
 	"github.com/openai/openai-go/v2"
+	"gopkg.in/yaml.v2"
 )
 
 // CopyFile copies a file from src to dst.
@@ -177,6 +178,18 @@ type Conversation struct {
 	Messages       []Message `json:"messages"`
 }
 
+type ConversationHistory struct {
+	ConversationID string `json:"conversationID"`
+	Seed           int    `json:"seed"`
+	Topic          string `json:"topic"`
+	Messages       []struct {
+		Timestamp string                                   `json:"timestamp,omitempty"`
+		MessageID string                                   `json:"messageID,omitempty"`
+		Content   string                                   `json:"content,omitempty"`
+		Param     []openai.ChatCompletionMessageParamUnion `json:"param,omitempty"`
+	} `json:"messages"`
+}
+
 // JSONToStruct takes raw JSON bytes and unmarshals into a Conversation struct
 func JSONToStruct(data []byte) (*Conversation, error) {
 	var conv *Conversation
@@ -200,4 +213,42 @@ type OpenAIError struct {
 	Type    string `json:"type"`
 	Param   string `json:"param,omitempty"`
 	Code    string `json:"code"`
+}
+
+func CommitCoversation(conv *Conversation, path string) error {
+	writeData, err := StructToJSON(*conv)
+	if err != nil {
+		return err
+	}
+	err = WriteJSON(path, writeData)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func UpdateConversationID(yamlFile string, conversationID string) error {
+	f, err := os.ReadFile(yamlFile)
+	if err != nil {
+		fmt.Printf("Error reading file %s: %v\n", yamlFile, err)
+	}
+
+	var config Config
+	err = yaml.Unmarshal([]byte(f), &config)
+	if err != nil {
+		fmt.Printf("Error unmarshaling YAML: %v\n", err)
+	}
+	config.LastConversationID = conversationID
+
+	updatedYAML, err := yaml.Marshal(&config)
+	if err != nil {
+		return err
+	}
+	err = os.WriteFile(yamlFile, updatedYAML, 0644)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
