@@ -1,4 +1,4 @@
-package cmd
+package app
 
 import (
 	"crypto/rand"
@@ -164,23 +164,9 @@ func JSONToSlice(data []byte) ([][]string, error) {
 	return parseJSONToSlice(data), nil
 }
 
-type Message struct {
-	Timestamp string                                   `json:"timestamp"`
-	MessageID string                                   `json:"messageID"`
-	Content   string                                   `json:"content"`
-	Param     []openai.ChatCompletionMessageParamUnion `json:"param"`
-}
-
 type Conversation struct {
-	ConversationID string    `json:"conversationID"`
-	Seed           int       `json:"seed"`
-	Topic          string    `json:"topic"`
-	Messages       []Message `json:"messages"`
-}
-
-type ConversationHistory struct {
 	ConversationID string `json:"conversationID"`
-	Seed           int    `json:"seed"`
+	Seed           int64  `json:"seed"`
 	Topic          string `json:"topic"`
 	Messages       []struct {
 		Timestamp string                                   `json:"timestamp,omitempty"`
