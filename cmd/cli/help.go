@@ -25,6 +25,7 @@ Core Commands:
   Commits:
     log                                    Show commit history for the current session
     msg "<message>"                        Send a new message to the current chat
+    pin "<message-id>"                     Pins a message for quick reference
     commit -m "<message>"                  Commit current conversation to current session
     diff <commitA> <commitB>               Show differences between two commits or conversation branches
 
