@@ -65,6 +65,7 @@ func StartNewSession(topic string) (*Conversation, error) {
 
 	// Fill metadata
 	convo.ConversationID = conversationID
+	convo.ParentID = conversationID
 	convo.Seed = seed
 	convo.Topic = topic
 	convo.Messages[0].MessageID, _ = CreateUUIDv4()

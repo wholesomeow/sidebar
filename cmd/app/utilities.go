@@ -166,6 +166,7 @@ func JSONToSlice(data []byte) ([][]string, error) {
 
 type Conversation struct {
 	ConversationID string `json:"conversationID"`
+	ParentID       string `json:"parentID"`
 	Seed           int64  `json:"seed"`
 	Topic          string `json:"topic"`
 	Messages       []struct {
