@@ -30,7 +30,7 @@ var sessionInitCmd = &cobra.Command{
     - Topic: %s
 
 Assistant: %s
-`, convo.ConversationID, convo.Seed, convo.Topic, convo.Messages[0].Content)
+`, convo.ConversationID, convo.Seed, convo.Topic, convo.Messages[convo.LastMessageID].Content)
 
 		// TODO: Add optional verbosity flag to print raw params/debug info
 	},

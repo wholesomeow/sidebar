@@ -27,6 +27,7 @@ type Conversation struct {
 	Seed           int64               `json:"seed"`
 	Topic          string              `json:"topic"`
 	Timestamp      time.Time           `json:"timestamp"`
+	LastMessageID  string              `json:"lastMessageID"`
 	Messages       map[string]*Message `json:"messages"`
 	Branches       map[string]*Branch  `json:"branches"`
 	Head           string              `json:"head"`

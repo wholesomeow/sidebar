@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
+	"time"
 
 	"github.com/openai/openai-go/v2"
 	"github.com/openai/openai-go/v2/option"
@@ -20,7 +22,6 @@ func SendMessage(msg string) (string, error) {
 	}
 
 	client := openai.NewClient(option.WithAPIKey(apiKey))
-	seed := int64(1) // TODO: implement seed generator
 
 	// Load last conversation
 	configPath := "./.sidebar/sidebar-config.yaml"
@@ -47,34 +48,56 @@ func SendMessage(msg string) (string, error) {
 		return "", fmt.Errorf("error reading conversation JSON: %w", err)
 	}
 
+	// Create new converstion struct and unmarshall data into it
 	var convo Conversation
 	if err := json.Unmarshal(data, &convo); err != nil {
 		return "", fmt.Errorf("error unmarshaling conversation JSON: %w", err)
 	}
 
-	// Append new user message
-	params := openai.ChatCompletionNewParams{
-		Messages: convo.Messages[0].Param,
-	}
-	params.Messages = append(params.Messages, openai.UserMessage(msg))
-
-	// Create final request
-	finalParam := openai.ChatCompletionNewParams{
-		Messages: params.Messages,
-		Seed:     openai.Int(seed),
+	// Prepare OpenAI request by appending the new user message
+	param := openai.ChatCompletionNewParams{
+		Messages: convo.Messages[convo.LastMessageID].Param,
+		Seed:     openai.Int(convo.Seed),
 		Model:    openai.ChatModelGPT4o,
 	}
+	param.Messages = append(param.Messages, openai.UserMessage(msg))
 
-	completion, err := client.Chat.Completions.New(context.Background(), finalParam)
-	if err != nil {
-		return "", fmt.Errorf("error from OpenAI: %w", err)
+	// Create new message
+	messageID, _ := CreateUUIDv4()
+	message := Message{
+		MessageID: messageID,
+		ParentIDs: []string{convo.LastMessageID},
+		Timestamp: time.Now(),
 	}
 
-	// Append AI message to conversation history
-	finalParam.Messages = append(finalParam.Messages, completion.Choices[0].Message.ToParam())
+	// Call OpenAI
+	completion, err := client.Chat.Completions.New(context.Background(), param)
+	if err != nil {
+		// Parse error JSON if present
+		errString := err.Error()
+		idx := strings.Index(errString, "{")
+		if idx != -1 {
+			jsonPart := errString[idx:]
+			var errResp OpenAIError
+			if e := json.Unmarshal([]byte(jsonPart), &errResp); e == nil {
+				message.Content = errResp.Message
+			}
+		}
+	} else {
+		message.Content = completion.Choices[0].Message.Content
+		message.Param = append(message.Param, completion.Choices[0].Message.ToParam())
+	}
 
-	// Optionally, you could save updated conversation history back to file here
-	convo.Messages[0].Param = finalParam.Messages
+	// Update LastMessageID in conversation
+	convo.LastMessageID = message.MessageID
+
+	// TODO: Remove the commits from these functions and
+	// have whatever implements them call them (like the CLI or web app)
+
+	// Commit to move Head
+	convo.Commit(&message)
+
+	// Commit to file
 	if err := CommitCoversation(&convo, convoPath); err != nil {
 		return "", fmt.Errorf("error committing updated conversation: %w", err)
 	}
