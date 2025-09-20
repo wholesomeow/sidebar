@@ -1,4 +1,4 @@
-## ✅ ChatGPT-Style App Checklist
+## ChatGPT-Style App Checklist
 
 ### Core Functionality (Go + OpenAI API)
 
