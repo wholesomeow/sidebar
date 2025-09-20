@@ -2,13 +2,13 @@
 
 ### Core Functionality (Go + OpenAI API)
 
-#### Sessions
+#### Conversations
 
 - [x] `init "<topic>"` — Start a new chat session with description
 - [ ] `resume <session-id>` — Resume an existing chat session
 - [ ] `exit` — Exit the current chat session
 - [ ] `archive <session-id>` — Archive a chat session
-- [ ] `sessions` — List all existing sessions
+- [ ] `list` — List all existing conversations
 
 #### Commits
 

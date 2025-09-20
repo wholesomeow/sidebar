@@ -9,7 +9,7 @@ import (
 )
 
 var sessionListConversationsCmd = &cobra.Command{
-	Use:  "archive",
+	Use:  "list",
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		convo_names, err := app.ListConversations()
