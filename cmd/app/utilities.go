@@ -2,6 +2,7 @@ package app
 
 import (
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -9,7 +10,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/openai/openai-go/v2"
 	"gopkg.in/yaml.v2"
 )
 
@@ -85,6 +85,16 @@ func CreateUUIDv4() (string, error) {
 	encodeHex(buf[:], uuid)
 
 	return string(buf[:]), nil
+}
+
+// Creates a SHA-256 hash from an input string
+func createSHA256(input string) string {
+	hash := sha256.New()
+	hash.Write([]byte(input))
+	byte_slice := hash.Sum(nil)
+	out_string := string(byte_slice)
+
+	return out_string
 }
 
 func ReadJSON(path string) ([]byte, error) {
@@ -164,19 +174,6 @@ func JSONToSlice(data []byte) ([][]string, error) {
 	return parseJSONToSlice(data), nil
 }
 
-type Conversation struct {
-	ConversationID string `json:"conversationID"`
-	ParentID       string `json:"parentID"`
-	Seed           int64  `json:"seed"`
-	Topic          string `json:"topic"`
-	Messages       []struct {
-		Timestamp string                                   `json:"timestamp,omitempty"`
-		MessageID string                                   `json:"messageID,omitempty"`
-		Content   string                                   `json:"content,omitempty"`
-		Param     []openai.ChatCompletionMessageParamUnion `json:"param,omitempty"`
-	} `json:"messages"`
-}
-
 // JSONToStruct takes raw JSON bytes and unmarshals into a Conversation struct
 func JSONToStruct(data []byte) (*Conversation, error) {
 	var conv *Conversation
@@ -193,13 +190,6 @@ func StructToJSON(conv Conversation) ([]byte, error) {
 		return nil, fmt.Errorf("error marshaling struct to JSON: %w", err)
 	}
 	return data, nil
-}
-
-type OpenAIError struct {
-	Message string `json:"message"`
-	Type    string `json:"type"`
-	Param   string `json:"param,omitempty"`
-	Code    string `json:"code"`
 }
 
 func CommitCoversation(conv *Conversation, path string) error {

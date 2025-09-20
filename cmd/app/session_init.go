@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/openai/openai-go/v2"
 	"github.com/openai/openai-go/v2/option"
@@ -14,13 +15,16 @@ import (
 
 // StartNewSession creates a new session, initializes files, calls OpenAI, and returns display info.
 func StartNewSession(topic string) (*Conversation, error) {
+	// Prep the API Key, one way or another
 	apiKey := os.Getenv("OPENAI_API_KEY")
 	if len(apiKey) == 0 {
 		apiKey = GetAPIKey()
 	}
 
+	// Create the client
 	client := openai.NewClient(option.WithAPIKey(apiKey))
 
+	// Start prepping session data
 	var seed int64 = 1 // TODO: add random seed generator
 	conversationID, err := CreateUUIDv4()
 	if err != nil {
@@ -45,14 +49,15 @@ func StartNewSession(topic string) (*Conversation, error) {
 	}
 
 	// Read/parse convo file
-	data, err := ReadJSON(newPath)
-	if err != nil {
-		return nil, fmt.Errorf("error reading convo file: %w", err)
-	}
-	convo, err := JSONToStruct(data)
-	if err != nil {
-		return nil, fmt.Errorf("error parsing convo JSON: %w", err)
-	}
+	// Don't need to read in an existing conversation file because we're creating a new conversation here
+	// data, err := ReadJSON(newPath)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("error reading convo file: %w", err)
+	// }
+	// convo, err := JSONToStruct(data)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("error parsing convo JSON: %w", err)
+	// }
 
 	// Prepare OpenAI request
 	param := openai.ChatCompletionNewParams{
@@ -63,12 +68,14 @@ func StartNewSession(topic string) (*Conversation, error) {
 		Model: openai.ChatModelGPT4o,
 	}
 
-	// Fill metadata
-	convo.ConversationID = conversationID
-	convo.ParentID = conversationID
-	convo.Seed = seed
-	convo.Topic = topic
-	convo.Messages[0].MessageID, _ = CreateUUIDv4()
+	// Create new conversation and fill metadata
+	convo := NewConversation(topic, seed, conversationID)
+	messageID, _ := CreateUUIDv4()
+	message := Message{
+		MessageID: messageID,
+		ParentIDs: []string{conversationID},
+		Timestamp: time.Now(),
+	}
 
 	// Call OpenAI
 	completion, err := client.Chat.Completions.New(context.Background(), param)
@@ -80,12 +87,12 @@ func StartNewSession(topic string) (*Conversation, error) {
 			jsonPart := errString[idx:]
 			var errResp OpenAIError
 			if e := json.Unmarshal([]byte(jsonPart), &errResp); e == nil {
-				convo.Messages[0].Content = errResp.Message
+				message.Content = errResp.Message
 			}
 		}
 	} else {
-		convo.Messages[0].Content = completion.Choices[0].Message.Content
-		convo.Messages[0].Param = append(convo.Messages[0].Param, completion.Choices[0].Message.ToParam())
+		message.Content = completion.Choices[0].Message.Content
+		message.Param = append(message.Param, completion.Choices[0].Message.ToParam())
 	}
 
 	// Commit to file
