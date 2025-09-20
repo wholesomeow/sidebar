@@ -68,7 +68,7 @@ func StartNewSession(topic string) (*Conversation, error) {
 		Model: openai.ChatModelGPT4o,
 	}
 
-	// Create new conversation and fill metadata
+	// Create new conversation and new message
 	convo := NewConversation(topic, seed, conversationID)
 	messageID, _ := CreateUUIDv4()
 	message := Message{
@@ -94,6 +94,15 @@ func StartNewSession(topic string) (*Conversation, error) {
 		message.Content = completion.Choices[0].Message.Content
 		message.Param = append(message.Param, completion.Choices[0].Message.ToParam())
 	}
+
+	// Set last messageID
+	convo.LastMessageID = message.MessageID
+
+	// TODO: Remove the commits from these functions and
+	// have whatever implements them call them (like the CLI or web app)
+
+	// Commit to move Head
+	convo.Commit(&message)
 
 	// Commit to file
 	if err := CommitCoversation(convo, newPath); err != nil {
