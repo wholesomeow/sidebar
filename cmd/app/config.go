@@ -9,8 +9,9 @@ import (
 )
 
 type Config struct {
-	APIKEY             string `yaml:"API_KEY"`
-	LastConversationID string `yaml:"lastConversationID"`
+	APIKEY                   string `yaml:"API_KEY"`
+	LastConversationID       string `yaml:"lastConversationID"`
+	conversationFileLocation string `yaml:"conversationFileLocation"`
 }
 
 // SetupConfig creates the .sidebar directory if missing and copies template config.

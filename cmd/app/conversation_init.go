@@ -14,7 +14,7 @@ import (
 )
 
 // StartNewSession creates a new session, initializes files, calls OpenAI, and returns display info.
-func StartNewSession(topic string) (*Conversation, error) {
+func StartNewConversation(topic string) (*Conversation, error) {
 	// Prep the API Key, one way or another
 	apiKey := os.Getenv("OPENAI_API_KEY")
 	if len(apiKey) == 0 {
@@ -30,6 +30,8 @@ func StartNewSession(topic string) (*Conversation, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error creating conversationID: %w", err)
 	}
+
+	// TODO: Read in the config here and change path from hardcoded to config.conversationFileLocation
 
 	// File handling
 	path := "./.sidebar"
