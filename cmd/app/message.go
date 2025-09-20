@@ -95,7 +95,9 @@ func SendMessage(msg string) (string, error) {
 	// have whatever implements them call them (like the CLI or web app)
 
 	// Commit to move Head
-	convo.Commit(&message)
+	if err := convo.Commit(&message); err != nil {
+		return completion.Choices[0].Message.Content, fmt.Errorf("commit failed: %v", err)
+	}
 
 	// Commit to file
 	if err := CommitCoversation(&convo, convoPath); err != nil {
