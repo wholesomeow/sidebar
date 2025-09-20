@@ -37,6 +37,7 @@ type Branch struct {
 type Conversation struct {
 	ConversationID string              `json:"conversationID"` // Unique ID for the entire conversation (like a repo UUID).
 	Seed           int64               `json:"seed"`           // RNG seed to reproduce generation deterministically.
+	Name           string              `json:"name"`           // Summarized name of this conversation.
 	Topic          string              `json:"topic"`          // High-level topic or label for this conversation.
 	Timestamp      time.Time           `json:"timestamp"`      // Time the conversation was created.
 	LastMessageID  string              `json:"lastMessageID"`  // ID of the most recent message added (usually same as Head).

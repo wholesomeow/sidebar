@@ -14,7 +14,7 @@ var sessionInitCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		topic := args[0]
 
-		convo, err := app.StartNewSession(topic)
+		convo, err := app.StartNewConversation(topic)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %s\n", err)
 			os.Exit(1)
