@@ -102,7 +102,9 @@ func StartNewSession(topic string) (*Conversation, error) {
 	// have whatever implements them call them (like the CLI or web app)
 
 	// Commit to move Head
-	convo.Commit(&message)
+	if err := convo.Commit(&message); err != nil {
+		return convo, fmt.Errorf("commit failed: %v", err)
+	}
 
 	// Commit to file
 	if err := CommitCoversation(convo, newPath); err != nil {
