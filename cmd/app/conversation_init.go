@@ -72,6 +72,7 @@ func StartNewConversation(topic string) (*Conversation, error) {
 
 	// Create new conversation and new message
 	convo := NewConversation(topic, seed, conversationID)
+	convo.Path = newPath // Set conversation path
 	messageID, _ := CreateUUIDv4()
 	message := Message{
 		MessageID: messageID,

@@ -192,6 +192,39 @@ func StructToJSON(conv Conversation) ([]byte, error) {
 	return data, nil
 }
 
+func ConversationfromJSON(configPath string) (*Conversation, error) {
+	// Load config file and unmarshall into struct
+	var config Config
+	configFile, err := os.ReadFile(configPath)
+	if err != nil {
+		return nil, fmt.Errorf("error reading config: %w", err)
+	}
+	if err := yaml.Unmarshal(configFile, &config); err != nil {
+		return nil, fmt.Errorf("error unmarshaling YAML: %w", err)
+	}
+
+	convoFile := fmt.Sprintf("convo_%s.json", config.LastConversationID)
+	convoPath := filepath.Join("./.sidebar", convoFile)
+
+	if _, err := os.Stat(convoPath); os.IsNotExist(err) {
+		return nil, fmt.Errorf("conversation file '%s' not found", convoPath)
+	}
+
+	// Load conversation history
+	data, err := ReadJSON(convoPath)
+	if err != nil {
+		return nil, fmt.Errorf("error reading conversation JSON: %w", err)
+	}
+
+	// Create new converstion struct and unmarshall data into it
+	var convo Conversation
+	if err := json.Unmarshal(data, &convo); err != nil {
+		return nil, fmt.Errorf("error unmarshaling conversation JSON: %w", err)
+	}
+
+	return &convo, nil
+}
+
 func CommitCoversation(conv *Conversation, path string) error {
 	writeData, err := StructToJSON(*conv)
 	if err != nil {

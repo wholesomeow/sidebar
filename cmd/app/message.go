@@ -5,13 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/openai/openai-go/v2"
 	"github.com/openai/openai-go/v2/option"
-	"gopkg.in/yaml.v2"
 )
 
 // SendMessage sends a message to the last active conversation and returns the assistant's response
@@ -25,33 +23,9 @@ func SendMessage(msg string) (string, error) {
 
 	// Load last conversation
 	configPath := "./.sidebar/sidebar-config.yaml"
-	configFile, err := os.ReadFile(configPath)
+	convo, err := ConversationfromJSON(configPath)
 	if err != nil {
-		return "", fmt.Errorf("error reading config: %w", err)
-	}
-
-	var config Config
-	if err := yaml.Unmarshal(configFile, &config); err != nil {
-		return "", fmt.Errorf("error unmarshaling YAML: %w", err)
-	}
-
-	convoFile := fmt.Sprintf("convo_%s.json", config.LastConversationID)
-	convoPath := filepath.Join("./.sidebar", convoFile)
-
-	if _, err := os.Stat(convoPath); os.IsNotExist(err) {
-		return "", fmt.Errorf("conversation file '%s' not found", convoPath)
-	}
-
-	// Load conversation history
-	data, err := ReadJSON(convoPath)
-	if err != nil {
-		return "", fmt.Errorf("error reading conversation JSON: %w", err)
-	}
-
-	// Create new converstion struct and unmarshall data into it
-	var convo Conversation
-	if err := json.Unmarshal(data, &convo); err != nil {
-		return "", fmt.Errorf("error unmarshaling conversation JSON: %w", err)
+		return "", fmt.Errorf("error creating conversation struct: %w", err)
 	}
 
 	// Prepare OpenAI request by appending the new user message
@@ -100,7 +74,7 @@ func SendMessage(msg string) (string, error) {
 	}
 
 	// Commit to file
-	if err := CommitCoversation(&convo, convoPath); err != nil {
+	if err := CommitCoversation(convo, convo.Path); err != nil {
 		return "", fmt.Errorf("error committing updated conversation: %w", err)
 	}
 
