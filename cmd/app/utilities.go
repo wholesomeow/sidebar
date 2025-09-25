@@ -13,6 +13,9 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// TODO: Move git-like functions to own file
+// TODO: Reorganize functions so it's not a bland utility file
+
 // CopyFile copies a file from src to dst.
 func CopyFile(src, dstDir string) error {
 	// Open the source file for reading
