@@ -2,7 +2,10 @@
 
 ### Core Functionality (Go + OpenAI API)
 
-#### Conversations
+- [ ] Go through and split the Go logic from the OpenAI API calls so I can test stuff without spending money on the API
+- [ ] Build dummy good message so I can pass that around my logic
+
+#### Conversations - v1 DONE
 
 - [x] `init "<topic>"` - Start a new chat session with description
 - [x] `archive <session-id>` - Archive a chat session
@@ -11,11 +14,10 @@
 
 #### Messages
 
-- [ ] `log` - Show commit history for the current session
 - [x] `msg "<message>"` - Send a new message to the current chat
 - [ ] `correction` "<message>" - Provide a correction to the previous message
 - [x] `pin "<message-id>"` - Pin a message for quick reference
-- [ ] `commit -m "<message>"` - Commit current conversation to current session
+- [x] `commit` - Commit current conversation
 - [ ] `diff <commitA> <commitB>` - Show differences between two commits or conversation branches
 
 #### Branches
