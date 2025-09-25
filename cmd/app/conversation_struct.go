@@ -38,11 +38,12 @@ type Conversation struct {
 	ConversationID string              `json:"conversationID"` // Unique ID for the entire conversation (like a repo UUID).
 	Seed           int64               `json:"seed"`           // RNG seed to reproduce generation deterministically.
 	Name           string              `json:"name"`           // Summarized name of this conversation.
+	Path           string              `json:"path"`           // Path to where this conversation is stored on system
 	Topic          string              `json:"topic"`          // High-level topic or label for this conversation.
 	Timestamp      time.Time           `json:"timestamp"`      // Time the conversation was created.
 	LastMessageID  string              `json:"lastMessageID"`  // ID of the most recent message added (usually same as Head).
 	Messages       map[string]*Message `json:"messages"`       // All messages keyed by their IDs (conversation graph).
-	Pinned         map[string]*Message `json:"pinned"`         // Subset of messages marked as important/bookmarked.
+	Pinned         map[string]*Message `json:"pinned"`         // Subset of messages marked as important/bookmarked, keyed by Message ID.
 	Branches       map[string]*Branch  `json:"branches"`       // All branches, keyed by branch IDs.
 	Head           string              `json:"head"`           // ID of the current branch head (active pointer).
 	Archive        bool                `json:"archive"`        // Marks conversation as archived (read-only).

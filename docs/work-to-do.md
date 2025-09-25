@@ -4,47 +4,48 @@
 
 #### Conversations
 
-- [x] `init "<topic>"` — Start a new chat session with description
-- [ ] `resume <session-id>` — Resume an existing chat session
-- [ ] `exit` — Exit the current chat session
-- [ ] `archive <session-id>` — Archive a chat session
-- [ ] `list` — List all existing conversations
+- [x] `init "<topic>"` - Start a new chat session with description
+- [x] `archive <session-id>` - Archive a chat session
+- [x] `unarchive <session-id>` - Archive a chat session
+- [x] `list` - List all existing conversations
 
-#### Commits
+#### Messages
 
-- [ ] `log` — Show commit history for the current session
-- [x] `msg "<message>"` — Send a new message to the current chat
-- [ ] `pin "<message-id>"` — Pin a message for quick reference
-- [ ] `commit -m "<message>"` — Commit current conversation to current session
-- [ ] `diff <commitA> <commitB>` — Show differences between two commits or conversation branches
+- [ ] `log` - Show commit history for the current session
+- [x] `msg "<message>"` - Send a new message to the current chat
+- [ ] `correction` "<message>" - Provide a correction to the previous message
+- [x] `pin "<message-id>"` - Pin a message for quick reference
+- [ ] `commit -m "<message>"` - Commit current conversation to current session
+- [ ] `diff <commitA> <commitB>` - Show differences between two commits or conversation branches
 
 #### Branches
 
-- [ ] `branch <name> -from <commit>` — Create a new branch from a commit
-- [ ] `checkout <name>` — Switch to the specified branch
-- [ ] `branch-delete <name>` — Delete a branch
-- [ ] `list branches` — List all branches
+- [ ] `branch <name> -from <commit>` - Create a new branch from a commit
+- [ ] `checkout <name>` - Switch to the specified branch
+- [ ] `branch-delete <name>` - Delete a branch
+- [ ] `list branches` - List all branches
 
 #### Tangents
 
-- [ ] `tangent "<message>"` — Create a tangent (short-lived side branch)
-- [ ] `tangent-expand <tangent-id>` — Promote tangent into a full branch
-- [ ] `tangent-resolve <tangent-id>` — Resolve tangent and delete branch
-- [ ] `tangent-resolve all` — Resolve all tangents
-- [ ] `tangent-list` — List all open tangents
+- [ ] `tangent "<message>"` - Create a tangent (short-lived side branch)
+- [ ] `tangent-expand <tangent-id>` - Promote tangent into a full branch
+- [ ] `tangent-resolve <tangent-id>` - Resolve tangent and delete branch
+- [ ] `tangent-resolve all` - Resolve all tangents
+- [ ] `tangent-list` - List all open tangents
 
 #### Merges
 
-- [ ] `merge <branchA> <branchB> -m "<msg>"` — Merge branches with a message
+- [ ] `merge <branchA> <branchB> -m "<msg>"` - Merge branches with a message
 
 #### Hooks
 
-- [ ] `hooks config` — Edit pre-commit hook configuration
+- [ ] `hooks config` - Edit pre-commit hook configuration
 
-#### Export
+#### Docs
 
-- [ ] `export <message-id> <doc-title>` — Export a message to Markdown
-- [ ] `export <conversation-id> <doc-title>` — Export a conversation to Markdown
+- [ ] `doc <doc-title>` - Create a new doc
+- [ ] `export <message-id> <doc-title>` - Export a message to new or existing Markdown file
+- [ ] `export <conversation-id> <doc-title>` - Export a conversation to new or existing Markdown file
 
 ---
 
