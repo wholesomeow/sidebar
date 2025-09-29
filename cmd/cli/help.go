@@ -61,7 +61,10 @@ var helpCmd = &cobra.Command{
 	Short: "displays sidebar help",
 	Long:  "Show help for sidebar or a specific command",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Fprint(os.Stdout, helpMsg)
+		if _, err := fmt.Fprint(os.Stdout, helpMsg); err != nil {
+			fmt.Fprintf(os.Stderr, "failed to write output: %v\n", err)
+			os.Exit(1)
+		}
 	},
 }
 

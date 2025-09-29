@@ -28,23 +28,35 @@ var rootCmd = &cobra.Command{
 	Long:  "Manage AI-assisted conversations with sessions, commits, branches, tangents, and exports.",
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := app.SetupConfig(); err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			if _, err = fmt.Fprintf(os.Stderr, "Error: %v\n", err); err != nil {
+				fmt.Fprintf(os.Stderr, "failed to write output: %v\n", err)
+				os.Exit(1)
+			}
 		}
 
 		fmt.Println(welcomeMsg)
 
 		apiKey, err := app.InitAPIKey()
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			if _, err = fmt.Fprintf(os.Stderr, "Error: %v\n", err); err != nil {
+				fmt.Fprintf(os.Stderr, "failed to write output: %v\n", err)
+				os.Exit(1)
+			}
 			return
 		}
-		fmt.Fprintf(os.Stdout, "API Key: %s\n", apiKey)
+		if _, err = fmt.Fprintf(os.Stdout, "API Key: %s\n", apiKey); err != nil {
+			fmt.Fprintf(os.Stderr, "failed to write output: %v\n", err)
+			os.Exit(1)
+		}
 	},
 }
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
+		if _, err = fmt.Fprintf(os.Stderr, "Error: %s\n", err); err != nil {
+			fmt.Fprintf(os.Stderr, "failed to write output: %v\n", err)
+			os.Exit(1)
+		}
 		os.Exit(1)
 	}
 }

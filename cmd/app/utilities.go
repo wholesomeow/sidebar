@@ -2,7 +2,6 @@ package app
 
 import (
 	"crypto/rand"
-	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -91,14 +90,14 @@ func CreateUUIDv4() (string, error) {
 }
 
 // Creates a SHA-256 hash from an input string
-func createSHA256(input string) string {
-	hash := sha256.New()
-	hash.Write([]byte(input))
-	byte_slice := hash.Sum(nil)
-	out_string := string(byte_slice)
+// func createSHA256(input string) string {
+// 	hash := sha256.New()
+// 	hash.Write([]byte(input))
+// 	byte_slice := hash.Sum(nil)
+// 	out_string := string(byte_slice)
 
-	return out_string
-}
+// 	return out_string
+// }
 
 func ReadJSON(path string) ([]byte, error) {
 	var nil_data []byte

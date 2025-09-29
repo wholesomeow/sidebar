@@ -1,0 +1,126 @@
+[2025-09-29T18:07:04Z] [INFO] Clean previous builds
+[2025-09-29T18:07:04Z] [INFO] Linting codebase
+[2025-09-29T18:07:04Z] [INFO] Running: golangci-lint run
+cmd/app/app_test.go:38:16: Error return value of `os.Chdir` is not checked (errcheck)
+	defer os.Chdir(origWd)
+	              ^
+cmd/app/app_test.go:39:10: Error return value of `os.Chdir` is not checked (errcheck)
+	os.Chdir(tmp)
+	        ^
+cmd/app/app_test.go:65:16: Error return value of `os.Chdir` is not checked (errcheck)
+	defer os.Chdir(origWd)
+	              ^
+cmd/app/utilities.go:26:21: Error return value of `srcFile.Close` is not checked (errcheck)
+	defer srcFile.Close() // Ensure the source file is closed
+	                   ^
+cmd/app/utilities.go:39:21: Error return value of `dstFile.Close` is not checked (errcheck)
+	defer dstFile.Close() // Ensure the destination file is closed
+	                   ^
+cmd/app/utilities.go:111:15: Error return value of `f.Close` is not checked (errcheck)
+	defer f.Close()
+	             ^
+cmd/cli/archive.go:18:13: Error return value of `fmt.Fprint` is not checked (errcheck)
+		fmt.Fprint(os.Stdout, sidebarArchive(args[0]))
+		          ^
+cmd/cli/exit.go:18:13: Error return value of `fmt.Fprint` is not checked (errcheck)
+		fmt.Fprint(os.Stdout, sidebarExit(args[0]))
+		          ^
+cmd/cli/help.go:64:13: Error return value of `fmt.Fprint` is not checked (errcheck)
+		fmt.Fprint(os.Stdout, helpMsg)
+		          ^
+cmd/cli/msg.go:23:14: Error return value of `fmt.Fprintf` is not checked (errcheck)
+		fmt.Fprintf(os.Stdout, "Assistant: %s\n", assistantMsg)
+		           ^
+cmd/cli/root.go:41:14: Error return value of `fmt.Fprintf` is not checked (errcheck)
+		fmt.Fprintf(os.Stdout, "API Key: %s\n", apiKey)
+		           ^
+cmd/app/utilities.go:94:6: func createSHA256 is unused (unused)
+func createSHA256(input string) string {
+     ^
+12 issues:
+* errcheck: 11
+* unused: 1
+[2025-09-29T18:08:20Z] [INFO] Clean previous builds
+[2025-09-29T18:08:20Z] [INFO] Linting codebase
+[2025-09-29T18:08:20Z] [INFO] Running: golangci-lint run
+cmd/app/app_test.go:38:16: Error return value of `os.Chdir` is not checked (errcheck)
+	defer os.Chdir(origWd)
+	              ^
+cmd/app/app_test.go:39:10: Error return value of `os.Chdir` is not checked (errcheck)
+	os.Chdir(tmp)
+	        ^
+cmd/app/app_test.go:65:16: Error return value of `os.Chdir` is not checked (errcheck)
+	defer os.Chdir(origWd)
+	              ^
+cmd/app/utilities.go:26:21: Error return value of `srcFile.Close` is not checked (errcheck)
+	defer srcFile.Close() // Ensure the source file is closed
+	                   ^
+cmd/app/utilities.go:39:21: Error return value of `dstFile.Close` is not checked (errcheck)
+	defer dstFile.Close() // Ensure the destination file is closed
+	                   ^
+cmd/app/utilities.go:111:15: Error return value of `f.Close` is not checked (errcheck)
+	defer f.Close()
+	             ^
+cmd/cli/archive.go:18:13: Error return value of `fmt.Fprint` is not checked (errcheck)
+		fmt.Fprint(os.Stdout, sidebarArchive(args[0]))
+		          ^
+cmd/cli/exit.go:18:13: Error return value of `fmt.Fprint` is not checked (errcheck)
+		fmt.Fprint(os.Stdout, sidebarExit(args[0]))
+		          ^
+cmd/cli/help.go:64:13: Error return value of `fmt.Fprint` is not checked (errcheck)
+		fmt.Fprint(os.Stdout, helpMsg)
+		          ^
+cmd/cli/msg.go:23:14: Error return value of `fmt.Fprintf` is not checked (errcheck)
+		fmt.Fprintf(os.Stdout, "Assistant: %s\n", assistantMsg)
+		           ^
+cmd/cli/root.go:41:14: Error return value of `fmt.Fprintf` is not checked (errcheck)
+		fmt.Fprintf(os.Stdout, "API Key: %s\n", apiKey)
+		           ^
+cmd/app/utilities.go:94:6: func createSHA256 is unused (unused)
+func createSHA256(input string) string {
+     ^
+12 issues:
+* errcheck: 11
+* unused: 1
+[2025-09-29T18:08:25Z] [INFO] Clean previous builds
+[2025-09-29T18:08:25Z] [INFO] Linting codebase
+[2025-09-29T18:08:25Z] [INFO] Running: golangci-lint run
+cmd/app/app_test.go:38:16: Error return value of `os.Chdir` is not checked (errcheck)
+	defer os.Chdir(origWd)
+	              ^
+cmd/app/app_test.go:39:10: Error return value of `os.Chdir` is not checked (errcheck)
+	os.Chdir(tmp)
+	        ^
+cmd/app/app_test.go:65:16: Error return value of `os.Chdir` is not checked (errcheck)
+	defer os.Chdir(origWd)
+	              ^
+cmd/app/utilities.go:26:21: Error return value of `srcFile.Close` is not checked (errcheck)
+	defer srcFile.Close() // Ensure the source file is closed
+	                   ^
+cmd/app/utilities.go:39:21: Error return value of `dstFile.Close` is not checked (errcheck)
+	defer dstFile.Close() // Ensure the destination file is closed
+	                   ^
+cmd/app/utilities.go:111:15: Error return value of `f.Close` is not checked (errcheck)
+	defer f.Close()
+	             ^
+cmd/cli/archive.go:18:13: Error return value of `fmt.Fprint` is not checked (errcheck)
+		fmt.Fprint(os.Stdout, sidebarArchive(args[0]))
+		          ^
+cmd/cli/exit.go:18:13: Error return value of `fmt.Fprint` is not checked (errcheck)
+		fmt.Fprint(os.Stdout, sidebarExit(args[0]))
+		          ^
+cmd/cli/help.go:64:13: Error return value of `fmt.Fprint` is not checked (errcheck)
+		fmt.Fprint(os.Stdout, helpMsg)
+		          ^
+cmd/cli/msg.go:23:14: Error return value of `fmt.Fprintf` is not checked (errcheck)
+		fmt.Fprintf(os.Stdout, "Assistant: %s\n", assistantMsg)
+		           ^
+cmd/cli/root.go:41:14: Error return value of `fmt.Fprintf` is not checked (errcheck)
+		fmt.Fprintf(os.Stdout, "API Key: %s\n", apiKey)
+		           ^
+cmd/app/utilities.go:94:6: func createSHA256 is unused (unused)
+func createSHA256(input string) string {
+     ^
+12 issues:
+* errcheck: 11
+* unused: 1
