@@ -124,3 +124,25 @@ func createSHA256(input string) string {
 12 issues:
 * errcheck: 11
 * unused: 1
+[2025-09-29T18:33:49Z] [INFO] Clean previous builds
+[2025-09-29T18:33:49Z] [INFO] Running Sidebar tests
+[2025-09-29T18:33:49Z] [INFO] There aren't any CLI tests yet
+[2025-09-29T18:33:49Z] [INFO] Will implement test-scripts soon... link to test-scripts here: https://bitfieldconsulting.com/posts/test-scripts
+[2025-09-29T18:33:49Z] [INFO] Running the other tests now
+[2025-09-29T18:33:49Z] [INFO] Running: go test ./... -v
+?   	github.com/wholesomeow/chatwrapper	[no test files]
+?   	github.com/wholesomeow/chatwrapper/cmd/cli	[no test files]
+=== RUN   TestSetupConfig
+--- PASS: TestSetupConfig (0.01s)
+=== RUN   TestInitAPIKey_Success
+--- PASS: TestInitAPIKey_Success (0.00s)
+=== RUN   TestInitAPIKey_MissingKey
+--- PASS: TestInitAPIKey_MissingKey (0.00s)
+=== RUN   TestGetAPIKey
+--- PASS: TestGetAPIKey (0.00s)
+PASS
+ok  	github.com/wholesomeow/chatwrapper/cmd/app	0.021s
+[2025-09-29T18:33:51Z] [INFO] Building Sidebar Binary
+[2025-09-29T18:33:51Z] [INFO] Running: GOOS=linux GOARCH=amd64 go build -o build/sidebar .
+[2025-09-29T18:33:51Z] [INFO] Binary built at: build/sidebar
+[2025-09-29T18:33:51Z] [INFO] Build finished
