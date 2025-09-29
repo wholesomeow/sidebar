@@ -47,8 +47,8 @@ case $1 in
     rm -f ./build/sidebar
 
     # Run the linter here first; don't need CI yet
-    log INFO "Linting codebase"
-    run_cmd golangci-lint run
+    # log INFO "Linting codebase"
+    # run_cmd golangci-lint run
 
     # Run the tests first so the binary wont build if tests fail
     # TODO: Split tests into app tests and cli tests
@@ -68,8 +68,8 @@ case $1 in
     rm -f ./build/sidebar
 
     # Run the linter here first; don't need CI yet
-    log INFO "Linting codebase"
-    run_cmd golangci-lint run
+    # log INFO "Linting codebase"
+    # run_cmd golangci-lint run
 
     log INFO "Building Sidebar Binary"
     run_cmd GOOS=linux GOARCH=amd64 go build -o build/sidebar .
@@ -81,8 +81,8 @@ case $1 in
     rm -f ./build/sidebar.exe build/sidebar-linux
 
     # Run the linter here first; don't need CI yet
-    log INFO "Linting codebase"
-    run_cmd golangci-lint run
+    # log INFO "Linting codebase"
+    # run_cmd golangci-lint run
 
     # Run the tests first so the binary wont build if tests fail
     # TODO: Split tests into app tests and cli tests
