@@ -53,9 +53,10 @@ case $1 in
     # Run the tests first so the binary wont build if tests fail
     # TODO: Split tests into app tests and cli tests
     log INFO "Running Sidebar tests"
-    # go test ./... -v
-    log INFO "Just kidding, there aren't any tests yet"
+    log INFO "There aren't any CLI tests yet"
     log INFO "Will implement test-scripts soon... link to test-scripts here: https://bitfieldconsulting.com/posts/test-scripts"
+    log INFO "Running the other tests now"
+    run_cmd go test ./... -v
 
     log INFO "Building Sidebar Binary"
     run_cmd GOOS=linux GOARCH=amd64 go build -o build/sidebar .
@@ -86,9 +87,10 @@ case $1 in
     # Run the tests first so the binary wont build if tests fail
     # TODO: Split tests into app tests and cli tests
     log INFO "Running Sidebar tests"
-    # go test ./... -v
     log INFO "Just kidding, there aren't any tests yet"
     log INFO "Will implement test-scripts soon... link to test-scripts here: https://bitfieldconsulting.com/posts/test-scripts"
+    log INFO "Running the other tests now"
+    run_cmd go test ./... -v
 
     log INFO "Building Sidebar Binary"
 

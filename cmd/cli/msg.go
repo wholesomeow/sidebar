@@ -16,7 +16,10 @@ var sessionMsgCmd = &cobra.Command{
 
 		assistantMsg, err := app.SendMessage(msg)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error sending message: %v\n", err)
+			if _, err = fmt.Fprintf(os.Stderr, "Error sending message: %v\n", err); err != nil {
+				fmt.Fprintf(os.Stderr, "failed to write output: %v\n", err)
+				os.Exit(1)
+			}
 			os.Exit(1)
 		}
 

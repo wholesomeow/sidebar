@@ -15,7 +15,10 @@ var sessionArchiveCmd = &cobra.Command{
 	Use:  "archive",
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Fprint(os.Stdout, sidebarArchive(args[0]))
+		if _, err := fmt.Fprint(os.Stdout, sidebarArchive(args[0])); err != nil {
+			fmt.Fprintf(os.Stderr, "failed to write output: %v\n", err)
+			os.Exit(1)
+		}
 	},
 }
 
