@@ -14,7 +14,16 @@ type Config struct {
 	conversationFileLocation string `yaml:"conversationFileLocation"`
 }
 
-// SetupConfig creates the .sidebar directory if missing and copies template config.
+// SetupConfig ensures that the local `.sidebar` directory exists
+// and initializes it with a default `sidebar-config.yaml` if missing.
+//
+// Side effects:
+//   - Creates `.sidebar` directory with 0755 permissions if absent.
+//   - Copies the `templates/sidebar-config.yaml` into `.sidebar` on first run.
+//
+// Returns:
+//   - nil on success.
+//   - error if the directory cannot be created or the template cannot be copied.
 func SetupConfig() error {
 	path := "./.sidebar"
 	sourceFilePath := "templates/sidebar-config.yaml"
@@ -31,7 +40,17 @@ func SetupConfig() error {
 	return nil
 }
 
-// InitAPIKey ensures an API key is present in config or env and returns masked version.
+// InitAPIKey ensures that an OpenAI API key is available for the application.
+// It attempts to read the API key from `.sidebar/sidebar-config.yaml` or the
+// `OPENAI_API_KEY` environment variable. If no environment variable is set,
+// it sets `OPENAI_API_KEY` using the config file value.
+//
+// Side effects:
+//   - May set the `OPENAI_API_KEY` environment variable at runtime.
+//
+// Returns:
+//   - A masked string version of the API key (e.g., `abc...xyz`) on success.
+//   - An error if the config file cannot be read, parsed, or contains no key.
 func InitAPIKey() (string, error) {
 	yamlFile := filepath.Join("./.sidebar", "sidebar-config.yaml")
 	f, err := os.ReadFile(yamlFile)
@@ -65,7 +84,12 @@ func InitAPIKey() (string, error) {
 	return displayKey, nil
 }
 
-// GetAPIKey loads API key from config directly (without masking).
+// GetAPIKey retrieves the raw API key directly from `.sidebar/sidebar-config.yaml`.
+// Unlike InitAPIKey, it does not set environment variables or mask the result.
+//
+// Returns:
+//   - The API key string if present.
+//   - An empty string if the config file cannot be read, parsed, or contains no key.
 func GetAPIKey() string {
 	yamlFile := filepath.Join("./.sidebar", "sidebar-config.yaml")
 	f, err := os.ReadFile(yamlFile)

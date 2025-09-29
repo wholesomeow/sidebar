@@ -2,8 +2,8 @@
 
 ### Core Functionality (Go + OpenAI API)
 
-- [ ] Go through and split the Go logic from the OpenAI API calls so I can test stuff without spending money on the API
-- [ ] Build dummy good message so I can pass that around my logic
+- [x] Go through and split the Go logic from the OpenAI API calls so I can test stuff without spending money on the API
+- [x] Build dummy good message so I can pass that around my logic
 
 #### Conversations - v1 DONE
 
