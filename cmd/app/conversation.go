@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/openai/openai-go/v2"
-	"github.com/openai/openai-go/v2/option"
 	"gopkg.in/yaml.v2"
 )
 
@@ -65,16 +64,7 @@ type OpenAIError struct {
 }
 
 // StartNewSession creates a new session, initializes files, calls OpenAI, and returns display info.
-func StartNewConversation(topic string) (*Conversation, error) {
-	// Prep the API Key, one way or another
-	apiKey := os.Getenv("OPENAI_API_KEY")
-	if len(apiKey) == 0 {
-		apiKey = GetAPIKey()
-	}
-
-	// Create the client
-	client := openai.NewClient(option.WithAPIKey(apiKey))
-
+func StartNewConversation(client ChatClient, topic string) (*Conversation, error) {
 	// Start prepping session data
 	var seed int64 = 1 // TODO: add random seed generator
 	conversationID, err := CreateUUIDv4()
@@ -131,8 +121,8 @@ func StartNewConversation(topic string) (*Conversation, error) {
 		Timestamp: time.Now(),
 	}
 
-	// Call OpenAI
-	completion, err := client.Chat.Completions.New(context.Background(), param)
+	// Call OpenAI with custom wrapped ChatCompletion
+	completion, err := client.ChatCompletion(context.Background(), param)
 	if err != nil {
 		// Parse error JSON if present
 		errString := err.Error()
