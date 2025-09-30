@@ -11,7 +11,7 @@ import (
 type Config struct {
 	APIKEY                   string `yaml:"API_KEY"`
 	LastConversationID       string `yaml:"lastConversationID"`
-	conversationFileLocation string `yaml:"conversationFileLocation"`
+	ConversationFileLocation string `yaml:"conversationFileLocation"`
 }
 
 // SetupConfig ensures that the local `.sidebar` directory exists

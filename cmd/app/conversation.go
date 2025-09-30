@@ -180,7 +180,7 @@ func ListConversations() ([]string, error) {
 	}
 
 	// Read in conversation files location
-	entries, err := os.ReadDir(config.conversationFileLocation)
+	entries, err := os.ReadDir(config.ConversationFileLocation)
 	if err != nil {
 		return nil, err
 	}
@@ -195,7 +195,7 @@ func ListConversations() ([]string, error) {
 	var convo_names []string
 	for _, file := range files {
 		// Read/parse convo file
-		newPath := filepath.Join(config.conversationFileLocation, file)
+		newPath := filepath.Join(config.ConversationFileLocation, file)
 		data, err := ReadJSON(newPath)
 		if err != nil {
 			return nil, fmt.Errorf("error reading convo file: %w", err)
