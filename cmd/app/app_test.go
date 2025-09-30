@@ -6,7 +6,9 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
+	"github.com/openai/openai-go/v2"
 	"github.com/wholesomeow/chatwrapper/cmd/app"
 	"gopkg.in/yaml.v2"
 )
@@ -249,6 +251,97 @@ func TestStartNewConversation_ErrorResponseParsesOpenAIError(t *testing.T) {
 }
 
 // Test message.go ------------------------------------------------------------
+
+func setupConversationFixture(t *testing.T, tmp string) string {
+	t.Helper()
+
+	// Create .sidebar and config
+	sidebarDir := filepath.Join(tmp, ".sidebar")
+	if err := os.MkdirAll(sidebarDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	configFile := filepath.Join(sidebarDir, "sidebar-config.yaml")
+	cfg := app.Config{
+		APIKEY:                   "testkey",
+		LastConversationID:       "convo123",
+		ConversationFileLocation: sidebarDir,
+	}
+	data, _ := json.Marshal(cfg)
+	if err := os.WriteFile(configFile, data, 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create convo file
+	convo := app.NewConversation("test-topic", 1, "convo123")
+	msgID := "msg1"
+	convo.LastMessageID = msgID
+	convo.Messages[msgID] = &app.Message{
+		MessageID: msgID,
+		Content:   "previous",
+		Timestamp: time.Now(),
+		Param:     []openai.ChatCompletionMessageParamUnion{openai.UserMessage("previous")},
+	}
+	convoFile := filepath.Join(sidebarDir, "convo_convo123.json")
+	if err := app.CommitCoversation(convo, convoFile); err != nil {
+		t.Fatal(err)
+	}
+
+	return sidebarDir
+}
+
+func TestSendMessage_Success(t *testing.T) {
+	tmp := t.TempDir()
+	os.Chdir(tmp)
+
+	_ = setupConversationFixture(t, tmp)
+
+	mock := &app.MockClient{
+		MockResponse: &openai.ChatCompletion{
+			Choices: []openai.ChatCompletionChoice{
+				{
+					Message: openai.ChatCompletionMessage{
+						Role:    "assistant",
+						Content: "mock reply",
+					},
+				},
+			},
+		},
+	}
+
+	got, err := app.SendMessage(mock, "hello")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got != "mock reply" {
+		t.Errorf("expected %q, got %q", "mock reply", got)
+	}
+}
+
+func TestSendMessage_ErrorResponseParsesJSON(t *testing.T) {
+	tmp := t.TempDir()
+	os.Chdir(tmp)
+
+	_ = setupConversationFixture(t, tmp)
+
+	openaiErr := app.OpenAIError{
+		Message: "quota exceeded",
+		Type:    "insufficient_quota",
+		Code:    "403",
+	}
+	errJSON, _ := json.Marshal(openaiErr)
+
+	mock := &app.MockClient{
+		Err: fmt.Errorf("OpenAI error: %s", string(errJSON)),
+	}
+
+	got, err := app.SendMessage(mock, "hello")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got != openaiErr.Message {
+		t.Errorf("expected %q, got %q", openaiErr.Message, got)
+	}
+}
 
 // Test archive.go ------------------------------------------------------------
 
