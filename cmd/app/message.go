@@ -4,23 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
 	"github.com/openai/openai-go/v2"
-	"github.com/openai/openai-go/v2/option"
 )
 
 // SendMessage sends a message to the last active conversation and returns the assistant's response
-func SendMessage(msg string) (string, error) {
-	apiKey := os.Getenv("OPENAI_API_KEY")
-	if len(apiKey) == 0 {
-		apiKey = GetAPIKey()
-	}
-
-	client := openai.NewClient(option.WithAPIKey(apiKey))
-
+func SendMessage(client ChatClient, msg string) (string, error) {
 	// Load last conversation
 	configPath := "./.sidebar/sidebar-config.yaml"
 	convo, err := ConversationfromJSON(configPath)
@@ -45,7 +36,7 @@ func SendMessage(msg string) (string, error) {
 	}
 
 	// Call OpenAI
-	completion, err := client.Chat.Completions.New(context.Background(), param)
+	completion, err := client.ChatCompletion(context.Background(), param)
 	if err != nil {
 		// Parse error JSON if present
 		errString := err.Error()

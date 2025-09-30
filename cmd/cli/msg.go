@@ -14,7 +14,8 @@ var sessionMsgCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		msg := args[0]
 
-		assistantMsg, err := app.SendMessage(msg)
+		client := app.NewOpenAIClient()
+		assistantMsg, err := app.SendMessage(client, msg)
 		if err != nil {
 			if _, err = fmt.Fprintf(os.Stderr, "Error sending message: %v\n", err); err != nil {
 				fmt.Fprintf(os.Stderr, "failed to write output: %v\n", err)
