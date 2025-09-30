@@ -1,6 +1,8 @@
 package app_test
 
 import (
+	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -130,6 +132,121 @@ func TestGetAPIKey(t *testing.T) {
 // Test client.go -------------------------------------------------------------
 
 // Test conversation.go -------------------------------------------------------
+
+func TestStartNewConversation_Success(t *testing.T) {
+	// TODO: Fix this so it can see the sidebar-config.yaml. Might need to implement a test config file or something
+	tmp := t.TempDir()
+
+	// Set up fake .sidebar dir with template
+	sidebarDir := filepath.Join(tmp, ".sidebar")
+	if err := os.MkdirAll(sidebarDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	templateDir := filepath.Join(tmp, "templates")
+	if err := os.MkdirAll(templateDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	templateFile := filepath.Join(templateDir, "convo.json")
+	if err := os.WriteFile(templateFile, []byte(`{"conversationID": "template"}`), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Move cwd so StartNewConversation sees this temp .sidebar
+	origWd, _ := os.Getwd()
+	defer os.Chdir(origWd)
+	os.Chdir(tmp)
+
+	// Fake client returns a canned ChatCompletion
+	mockTopic := "This is an API test."
+	expectedContent := "Got it — you said: \"This is an API test.\" Everything looks good!"
+
+	// Run
+	mock := &app.MockClient{}
+	convo, err := app.StartNewConversation(mock, mockTopic)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// 1. New conversation file created
+	if convo.Path == "" {
+		t.Errorf("expected convo.Path to be set")
+	}
+	if _, err := os.Stat(convo.Path); err != nil {
+		t.Errorf("expected convo file on disk, got %v", err)
+	}
+
+	// 2. Client was used
+	if convo.Topic != mockTopic {
+		t.Errorf("expected topic %q, got %q", mockTopic, convo.Topic)
+	}
+
+	// 3. Message created
+	msg, ok := convo.Messages[convo.LastMessageID]
+	if !ok {
+		t.Fatalf("expected message with LastMessageID in convo.Messages")
+	}
+
+	// 4. ChatCompletion parsed
+	if msg.Content != expectedContent {
+		t.Errorf("expected message content %q, got %q", expectedContent, msg.Content)
+	}
+
+	// 5. Commit applied (Head updated)
+	if convo.Head == "" {
+		t.Errorf("expected convo.Head to be set after commit")
+	}
+}
+
+func TestStartNewConversation_ErrorResponseParsesOpenAIError(t *testing.T) {
+	tmp := t.TempDir()
+
+	// Set up dirs
+	sidebarDir := filepath.Join(tmp, ".sidebar")
+	if err := os.MkdirAll(sidebarDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	templateDir := filepath.Join(tmp, "templates")
+	if err := os.MkdirAll(templateDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	templateFile := filepath.Join(templateDir, "convo.json")
+	if err := os.WriteFile(templateFile, []byte(`{"conversationID": "template"}`), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Move cwd
+	origWd, _ := os.Getwd()
+	defer os.Chdir(origWd)
+	os.Chdir(tmp)
+
+	// Fake client returns error with JSON payload
+	openaiErr := app.OpenAIError{
+		Message: "quota exceeded",
+		Type:    "insufficient_quota",
+		Code:    "403",
+	}
+	errJSON, _ := json.Marshal(openaiErr)
+
+	// Mock client that always returns an error
+	mock := &app.MockClient{
+		Err: fmt.Errorf("OpenAI error: %s", string(errJSON)),
+	}
+
+	// Run
+	convo, err := app.StartNewConversation(mock, "test-topic")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Check that message content came from parsed error
+	msg, ok := convo.Messages[convo.LastMessageID]
+	if !ok {
+		t.Fatalf("expected message created")
+	}
+	if msg.Content != openaiErr.Message {
+		t.Errorf("expected message content %q, got %q", openaiErr.Message, msg.Content)
+	}
+}
 
 // Test message.go ------------------------------------------------------------
 
