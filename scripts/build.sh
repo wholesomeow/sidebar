@@ -3,9 +3,10 @@
 set -euo pipefail
 
 # Set logging variables
-LOG_DIR="./logs"
+timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+LOG_DIR="./build/logs"
 mkdir -p "$LOG_DIR"
-LOG_FILE="$LOG_DIR/build.log"
+LOG_FILE="$LOG_DIR/build-$timestamp.log"
 
 # Logging function
 log() {
