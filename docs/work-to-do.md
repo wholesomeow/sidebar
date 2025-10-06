@@ -41,7 +41,7 @@
 
 #### Hooks
 
-- [ ] `hooks config` - Edit pre-commit hook configuration
+- [ ] `hooks config` - Edit message/commit hook configuration
 
 #### Docs
 

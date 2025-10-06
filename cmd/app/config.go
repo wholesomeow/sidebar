@@ -25,6 +25,7 @@ type Config struct {
 //   - nil on success.
 //   - error if the directory cannot be created or the template cannot be copied.
 func SetupConfig() error {
+	// TODO: Un-hard code this so I can test it
 	path := "./.sidebar"
 	sourceFilePath := "templates/sidebar-config.yaml"
 

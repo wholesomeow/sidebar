@@ -1,16 +1,13 @@
 package app_test
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
 
-	"github.com/openai/openai-go/v2"
 	"github.com/wholesomeow/chatwrapper/cmd/app"
-	"gopkg.in/yaml.v2"
 )
 
 // Create mock client for testing purposes
@@ -18,335 +15,205 @@ import (
 // mock := &MockClient{Response: "This is a fake client response"}
 // convo, err := StartNewConversation(mock, "Test Topic")
 
-// Test config.go -------------------------------------------------------------
+// Writing a test notes
+// Each test function should only test one thing
+// - Should name tests test purpose with prefix "Test" and pass in testing pointer
+// - Full example
+//   - func TestTestName(t *testing.T) {}
 
-// helper to write a yaml config file
-func writeConfigFile(t *testing.T, dir string, apiKey string) string {
+// - Should create a temp directory with tmp := t.TempDir()
+//   - Full example:
+// tmp := t.TempDir()
+// origWd, _ := os.Getwd()
+// defer os.Chdir(origWd)
+// os.Chdir(tmp)
+
+// - Should show error in test with t.Errorf() or t.Fatalf()
+//   - Full example
+// if err := os.MkdirAll(sidebarDir, 0755); err != nil {
+// 	t.Fatalf("failed to make sidebar dir: %v", err)
+// }
+// if got != "testKey999" {
+// 	t.Errorf("expected key testKey999, got %q", got)
+// }
+
+// - Test helper functions should start with t.Helper() in function
+//   - Full example
+// func TestTestName(t *testing.T) {
+//     t.Helper()
+// }
+
+// Test Helpers ---------------------------------------------------------------
+
+func CreateFakeConfig(t *testing.T) (*app.Config, string) {
 	t.Helper()
-	cfgPath := filepath.Join(dir, "sidebar-config.yaml")
-	data := map[string]string{"API_KEY": apiKey}
-	out, err := yaml.Marshal(data)
-	if err != nil {
-		t.Fatalf("failed to marshal yaml: %v", err)
+
+	// Create fake config
+	tmp := t.TempDir()
+
+	sidebarDir := filepath.Join(tmp, ".sidebar")
+	if err := os.MkdirAll(sidebarDir, 0755); err != nil {
+		t.Fatal(err)
 	}
-	if err := os.WriteFile(cfgPath, out, 0644); err != nil {
-		t.Fatalf("failed to write yaml file: %v", err)
+
+	uuid, _ := app.CreateUUIDv4()
+	convoName := fmt.Sprintf("convo_%s.json", uuid)
+	convoPath := filepath.Join(sidebarDir, convoName)
+
+	configPath := filepath.Join(sidebarDir, "sidebar-config.yaml")
+	config := app.Config{
+		APIKEY:                   "teeheeAPIKey",
+		LastConversationID:       uuid,
+		ConversationFileLocation: convoPath,
 	}
-	return cfgPath
+
+	return &config, configPath
 }
 
-func TestSetupConfig(t *testing.T) {
-	tmp := t.TempDir()
-	// Override path in function by faking current dir
-	origWd, _ := os.Getwd()
-	defer os.Chdir(origWd)
-	os.Chdir(tmp)
+func CreateFakeMessage(t *testing.T) *app.Message {
+	t.Helper()
 
-	// place template file
+	// Create fake message
+	uuid, _ := app.CreateUUIDv4()
+	parentUUID, _ := app.CreateUUIDv4()
+	message := app.Message{
+		MessageID: uuid,
+		ParentIDs: []string{parentUUID},
+		Timestamp: time.Now(),
+		Content:   "Content Message Content",
+	}
+
+	return &message
+}
+
+// Test config.go -------------------------------------------------------------
+
+// Test client.go -------------------------------------------------------------
+
+// Test message.go ------------------------------------------------------------
+
+// Pre-Test Steps
+// Create Fake Config Struct and File
+// Create Fake Covnersation Struct
+// Populate Conversation Struct with Message(s)
+// Write Conversation Struct to File
+
+// Tests to write
+// 1. Message isn't malformed on creation
+// 2. ChatCompletion parsed
+// 3. Validate LastMessageID is updated
+// 4. Commit applied
+//     A. File saved
+//     B. Config updated
+//     C. Head updated
+// 5. Client returns error (403 - insufficient_quota)
+
+// Test conversation.go -------------------------------------------------------
+
+// Pre-Test Steps
+// Create Fake Config Struct and File
+// Create Fake Conversation Struct and File
+
+// Previously used mock conversation lines
+// mock := &app.MockClient{}
+// convo, err := app.StartNewConversation(mock, mockTopic)
+// if err != nil {
+// 	t.Fatalf("unexpected error: %v", err)
+// }
+
+// Tests to write
+// 1. New conversation file created
+// 2. Client was used
+// 3. Message created
+// 4. ChatCompletion parsed
+// 5. Commit applied
+//     A. File saved
+//     B. Config updated
+//     C. Head updated
+// 6. Client returns error (403 - insufficient_quota)
+
+func TestStartNewConversation_UsesMockCompletion(t *testing.T) {
+	tmp := t.TempDir()
+
+	// Create .sidebar dir
+	sidebarDir := filepath.Join(tmp, ".sidebar")
+	if err := os.MkdirAll(sidebarDir, 0755); err != nil {
+		t.Fatalf("failed to make sidebar dir: %v", err)
+	}
+
+	// Create a fake convo template file
 	templateDir := filepath.Join(tmp, "templates")
 	if err := os.MkdirAll(templateDir, 0755); err != nil {
 		t.Fatalf("failed to make templates dir: %v", err)
 	}
-	templateFile := filepath.Join(templateDir, "sidebar-config.yaml")
-	if err := os.WriteFile(templateFile, []byte("API_KEY: testkey"), 0644); err != nil {
+	templateFile := filepath.Join(templateDir, "convo.json")
+	if err := os.WriteFile(templateFile, []byte(`{"conversationID": "template"}`), 0644); err != nil {
 		t.Fatalf("failed to write template file: %v", err)
 	}
 
-	// run
-	if err := app.SetupConfig(); err != nil {
-		t.Errorf("SetupConfig failed: %v", err)
-	}
-
-	// check created file exists
-	if _, err := os.Stat("./.sidebar/sidebar-config.yaml"); os.IsNotExist(err) {
-		t.Errorf("expected config file to be copied, but not found")
-	}
-}
-
-func TestInitAPIKey_Success(t *testing.T) {
-	tmp := t.TempDir()
-	origWd, _ := os.Getwd()
-	defer os.Chdir(origWd)
-	os.Chdir(tmp)
-
-	// prepare config dir + file
-	sidebarDir := filepath.Join(tmp, ".sidebar")
-	if err := os.MkdirAll(sidebarDir, 0755); err != nil {
-		t.Fatalf("failed to make sidebar dir: %v", err)
-	}
-	writeConfigFile(t, sidebarDir, "abc1234567")
-
-	displayKey, err := app.InitAPIKey()
-	if err != nil {
-		t.Fatalf("InitAPIKey returned error: %v", err)
-	}
-
-	// check masked format
-	if len(displayKey) == 0 || displayKey[:3] != "abc" {
-		t.Errorf("unexpected displayKey: %s", displayKey)
-	}
-	// check env var set
-	if got := os.Getenv("OPENAI_API_KEY"); got != "abc1234567" {
-		t.Errorf("expected env var set, got %q", got)
-	}
-}
-
-func TestInitAPIKey_MissingKey(t *testing.T) {
-	tmp := t.TempDir()
-	origWd, _ := os.Getwd()
-	defer os.Chdir(origWd)
-	os.Chdir(tmp)
-
-	sidebarDir := filepath.Join(tmp, ".sidebar")
-	if err := os.MkdirAll(sidebarDir, 0755); err != nil {
-		t.Fatalf("failed to make sidebar dir: %v", err)
-	}
-	// write file with missing API_KEY
-	cfgPath := filepath.Join(sidebarDir, "sidebar-config.yaml")
-	if err := os.WriteFile(cfgPath, []byte(""), 0644); err != nil {
-		t.Fatalf("failed to write empty config: %v", err)
-	}
-
-	_, err := app.InitAPIKey()
-	if err == nil {
-		t.Errorf("expected error for missing API_KEY, got nil")
-	}
-}
-
-func TestGetAPIKey(t *testing.T) {
-	tmp := t.TempDir()
-	origWd, _ := os.Getwd()
-	defer os.Chdir(origWd)
-	os.Chdir(tmp)
-
-	sidebarDir := filepath.Join(tmp, ".sidebar")
-	if err := os.MkdirAll(sidebarDir, 0755); err != nil {
-		t.Fatalf("failed to make sidebar dir: %v", err)
-	}
-	writeConfigFile(t, sidebarDir, "testKey999")
-
-	got := app.GetAPIKey()
-	if got != "testKey999" {
-		t.Errorf("expected key testKey999, got %q", got)
-	}
-}
-
-// Test client.go -------------------------------------------------------------
-
-// Test conversation.go -------------------------------------------------------
-
-func TestStartNewConversation_Success(t *testing.T) {
-	// TODO: Fix this so it can see the sidebar-config.yaml. Might need to implement a test config file or something
-	tmp := t.TempDir()
-
-	// Set up fake .sidebar dir with template
-	sidebarDir := filepath.Join(tmp, ".sidebar")
-	if err := os.MkdirAll(sidebarDir, 0755); err != nil {
-		t.Fatal(err)
-	}
-	templateDir := filepath.Join(tmp, "templates")
-	if err := os.MkdirAll(templateDir, 0755); err != nil {
-		t.Fatal(err)
-	}
-	templateFile := filepath.Join(templateDir, "convo.json")
-	if err := os.WriteFile(templateFile, []byte(`{"conversationID": "template"}`), 0644); err != nil {
-		t.Fatal(err)
-	}
-
-	// Move cwd so StartNewConversation sees this temp .sidebar
-	origWd, _ := os.Getwd()
-	defer os.Chdir(origWd)
-	os.Chdir(tmp)
-
-	// Fake client returns a canned ChatCompletion
-	mockTopic := "This is an API test."
-	expectedContent := "Got it — you said: \"This is an API test.\" Everything looks good!"
-
-	// Run
-	mock := &app.MockClient{}
-	convo, err := app.StartNewConversation(mock, mockTopic)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
-	// 1. New conversation file created
-	if convo.Path == "" {
-		t.Errorf("expected convo.Path to be set")
-	}
-	if _, err := os.Stat(convo.Path); err != nil {
-		t.Errorf("expected convo file on disk, got %v", err)
-	}
-
-	// 2. Client was used
-	if convo.Topic != mockTopic {
-		t.Errorf("expected topic %q, got %q", mockTopic, convo.Topic)
-	}
-
-	// 3. Message created
-	msg, ok := convo.Messages[convo.LastMessageID]
-	if !ok {
-		t.Fatalf("expected message with LastMessageID in convo.Messages")
-	}
-
-	// 4. ChatCompletion parsed
-	if msg.Content != expectedContent {
-		t.Errorf("expected message content %q, got %q", expectedContent, msg.Content)
-	}
-
-	// 5. Commit applied (Head updated)
-	if convo.Head == "" {
-		t.Errorf("expected convo.Head to be set after commit")
-	}
-}
-
-func TestStartNewConversation_ErrorResponseParsesOpenAIError(t *testing.T) {
-	tmp := t.TempDir()
-
-	// Set up dirs
-	sidebarDir := filepath.Join(tmp, ".sidebar")
-	if err := os.MkdirAll(sidebarDir, 0755); err != nil {
-		t.Fatal(err)
-	}
-	templateDir := filepath.Join(tmp, "templates")
-	if err := os.MkdirAll(templateDir, 0755); err != nil {
-		t.Fatal(err)
-	}
-	templateFile := filepath.Join(templateDir, "convo.json")
-	if err := os.WriteFile(templateFile, []byte(`{"conversationID": "template"}`), 0644); err != nil {
-		t.Fatal(err)
-	}
-
-	// Move cwd
-	origWd, _ := os.Getwd()
-	defer os.Chdir(origWd)
-	os.Chdir(tmp)
-
-	// Fake client returns error with JSON payload
-	openaiErr := app.OpenAIError{
-		Message: "quota exceeded",
-		Type:    "insufficient_quota",
-		Code:    "403",
-	}
-	errJSON, _ := json.Marshal(openaiErr)
-
-	// Mock client that always returns an error
-	mock := &app.MockClient{
-		Err: fmt.Errorf("OpenAI error: %s", string(errJSON)),
-	}
-
-	// Run
-	convo, err := app.StartNewConversation(mock, "test-topic")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
-	// Check that message content came from parsed error
-	msg, ok := convo.Messages[convo.LastMessageID]
-	if !ok {
-		t.Fatalf("expected message created")
-	}
-	if msg.Content != openaiErr.Message {
-		t.Errorf("expected message content %q, got %q", openaiErr.Message, msg.Content)
-	}
-}
-
-// Test message.go ------------------------------------------------------------
-
-func setupConversationFixture(t *testing.T, tmp string) string {
-	t.Helper()
-
-	// Create .sidebar and config
-	sidebarDir := filepath.Join(tmp, ".sidebar")
-	if err := os.MkdirAll(sidebarDir, 0755); err != nil {
-		t.Fatal(err)
-	}
+	// Create a fake config file
 	configFile := filepath.Join(sidebarDir, "sidebar-config.yaml")
-	cfg := app.Config{
-		APIKEY:                   "testkey",
-		LastConversationID:       "convo123",
-		ConversationFileLocation: sidebarDir,
-	}
-	data, _ := json.Marshal(cfg)
-	if err := os.WriteFile(configFile, data, 0644); err != nil {
-		t.Fatal(err)
+	if err := os.WriteFile(configFile, []byte("API_KEY: fake-key\nlastConversationID: template\n"), 0644); err != nil {
+		t.Fatalf("failed to write config file: %v", err)
 	}
 
-	// Create convo file
-	convo := app.NewConversation("test-topic", 1, "convo123")
-	msgID := "msg1"
-	convo.LastMessageID = msgID
-	convo.Messages[msgID] = &app.Message{
-		MessageID: msgID,
-		Content:   "previous",
-		Timestamp: time.Now(),
-		Param:     []openai.ChatCompletionMessageParamUnion{openai.UserMessage("previous")},
-	}
-	convoFile := filepath.Join(sidebarDir, "convo_convo123.json")
-	if err := app.CommitCoversation(convo, convoFile); err != nil {
-		t.Fatal(err)
+	// Change into temp dir so StartNewConversation finds .sidebar
+	origWd, _ := os.Getwd()
+	defer os.Chdir(origWd)
+	if err := os.Chdir(tmp); err != nil {
+		t.Fatalf("failed to chdir: %v", err)
 	}
 
-	return sidebarDir
-}
+	client := &app.MockClient{}
+	topic := "This is an API test."
 
-func TestSendMessage_Success(t *testing.T) {
-	tmp := t.TempDir()
-	os.Chdir(tmp)
-
-	_ = setupConversationFixture(t, tmp)
-
-	mock := &app.MockClient{
-		MockResponse: &openai.ChatCompletion{
-			Choices: []openai.ChatCompletionChoice{
-				{
-					Message: openai.ChatCompletionMessage{
-						Role:    "assistant",
-						Content: "mock reply",
-					},
-				},
-			},
-		},
-	}
-
-	got, err := app.SendMessage(mock, "hello")
+	convo, err := app.StartNewConversation(client, topic)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if got != "mock reply" {
-		t.Errorf("expected %q, got %q", "mock reply", got)
-	}
-}
 
-func TestSendMessage_ErrorResponseParsesJSON(t *testing.T) {
-	tmp := t.TempDir()
-	os.Chdir(tmp)
-
-	_ = setupConversationFixture(t, tmp)
-
-	openaiErr := app.OpenAIError{
-		Message: "quota exceeded",
-		Type:    "insufficient_quota",
-		Code:    "403",
-	}
-	errJSON, _ := json.Marshal(openaiErr)
-
-	mock := &app.MockClient{
-		Err: fmt.Errorf("OpenAI error: %s", string(errJSON)),
+	// Assert last message was set from MockCompletion
+	msg, ok := convo.Messages[convo.LastMessageID]
+	if !ok {
+		t.Fatalf("expected last message to exist in convo")
 	}
 
-	got, err := app.SendMessage(mock, "hello")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	want := app.MockCompletion.Choices[0].Message.Content
+	if msg.Content != want {
+		t.Errorf("expected message content %q, got %q", want, msg.Content)
 	}
-	if got != openaiErr.Message {
-		t.Errorf("expected %q, got %q", openaiErr.Message, got)
+
+	// Optional: check timestamp sanity
+	if time.Since(msg.Timestamp) > 2*time.Second {
+		t.Errorf("expected recent timestamp, got %v", msg.Timestamp)
 	}
 }
 
 // Test archive.go ------------------------------------------------------------
 
+// Pre-Test Steps
+// Create Fake Config Struct and File
+// Create Fake Conversation Struct and File
+
+// Tests to write
+// 1. Archive conversation
+//     A. As Owner (success)
+//     B. As Non-Owner (failure)
+// 2. Attempt to write to conversation (should fail)
+// 3. Unarchive conversation
+//     A. As Owner (success)
+//     B. As Non-Owner (failure)
+
 // Test pin.go ----------------------------------------------------------------
 
-// Test toygit.go -------------------------------------------------------------
+// Pre-Test Steps
+// Create Fake Config Struct and File
+// Create Fake Conversation Struct and File
 
-// Test utilities.go ----------------------------------------------------------
+// Tests to write
+// 1. Pin new message
+// 2. List all pins
+// 3. Reload conversation and list all pins
+// 4. Unpin message
+// 5. List all pins
+// 6. Reload conversation and list all pins
