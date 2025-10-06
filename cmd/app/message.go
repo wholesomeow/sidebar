@@ -69,5 +69,5 @@ func SendMessage(client ChatClient, msg string) (string, error) {
 		return "", fmt.Errorf("error committing updated conversation: %w", err)
 	}
 
-	return completion.Choices[0].Message.Content, nil
+	return message.Content, nil
 }
