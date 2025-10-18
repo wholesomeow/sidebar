@@ -16,7 +16,7 @@ type SingleMessage struct {
 
 func SendMessage(c *gin.Context) {
 	// Get content from "form"
-	msg := c.PostForm("topic")
+	msg := c.PostForm("message")
 
 	// Create new conversation
 	client := app.NewOpenAIClient()
