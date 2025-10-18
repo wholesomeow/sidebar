@@ -21,16 +21,41 @@ func SendMessage(client ChatClient, msg string) (string, error) {
 
 	// Prepare OpenAI request by appending the new user message
 	param := openai.ChatCompletionNewParams{
-		Messages: convo.Messages[convo.LastMessageID].Param,
-		Seed:     openai.Int(convo.Seed),
-		Model:    openai.ChatModelGPT4o,
+		Messages: []openai.ChatCompletionMessageParamUnion{
+			openai.AssistantMessage(convo.Messages[convo.LastMessageID].Content),
+			openai.UserMessage(msg),
+		},
+		Seed:  openai.Int(convo.Seed),
+		Model: openai.ChatModelGPT4o,
 	}
-	param.Messages = append(param.Messages, openai.UserMessage(msg))
 
-	// Create new message
-	messageID, _ := CreateUUIDv4()
-	message := Message{
-		MessageID: messageID,
+	// Create new user message
+	userMessageID, _ := CreateUUIDv4()
+	userMessage := Message{
+		MessageID: userMessageID,
+		ParentIDs: []string{convo.LastMessageID},
+		Timestamp: time.Now(),
+		Role:      "user",
+		Content:   msg,
+	}
+
+	// Update LastMessageID in conversation
+	convo.LastMessageID = userMessage.MessageID
+
+	// Commit to move Head
+	if err := convo.Commit(&userMessage); err != nil {
+		return userMessage.Content, fmt.Errorf("commit failed: %v", err)
+	}
+
+	// Commit to file
+	if err := CommitCoversation(convo, convo.Path); err != nil {
+		return "", fmt.Errorf("error committing updated conversation: %w", err)
+	}
+
+	// Create new assistant message
+	assistantmessageID, _ := CreateUUIDv4()
+	assistantMessage := Message{
+		MessageID: assistantmessageID,
 		ParentIDs: []string{convo.LastMessageID},
 		Timestamp: time.Now(),
 	}
@@ -45,23 +70,20 @@ func SendMessage(client ChatClient, msg string) (string, error) {
 			jsonPart := errString[idx:]
 			var errResp OpenAIError
 			if e := json.Unmarshal([]byte(jsonPart), &errResp); e == nil {
-				message.Content = errResp.Message
+				assistantMessage.ErrorResponse = errResp.Message
 			}
 		}
 	} else {
-		message.Content = completion.Choices[0].Message.Content
-		message.Param = append(message.Param, completion.Choices[0].Message.ToParam())
+		assistantMessage.Role = string(completion.Choices[0].Message.Role)
+		assistantMessage.Content = string(completion.Choices[0].Message.Content)
 	}
 
 	// Update LastMessageID in conversation
-	convo.LastMessageID = message.MessageID
-
-	// TODO: Remove the commits from these functions and
-	// have whatever implements them call them (like the CLI or web app)
+	convo.LastMessageID = assistantMessage.MessageID
 
 	// Commit to move Head
-	if err := convo.Commit(&message); err != nil {
-		return completion.Choices[0].Message.Content, fmt.Errorf("commit failed: %v", err)
+	if err := convo.Commit(&assistantMessage); err != nil {
+		return assistantMessage.Content, fmt.Errorf("commit failed: %v", err)
 	}
 
 	// Commit to file
@@ -69,5 +91,5 @@ func SendMessage(client ChatClient, msg string) (string, error) {
 		return "", fmt.Errorf("error committing updated conversation: %w", err)
 	}
 
-	return message.Content, nil
+	return assistantMessage.Content, nil
 }
