@@ -165,7 +165,7 @@ func TestStartNewConversation_UsesMockCompletion(t *testing.T) {
 	}
 
 	client := &app.MockClient{}
-	topic := "This is an API test."
+	topic := "testing topic for chatbot wrapper application"
 
 	convo, err := app.StartNewConversation(client, topic)
 	if err != nil {

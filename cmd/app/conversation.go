@@ -19,11 +19,12 @@ import (
 // content and the OpenAI ChatCompletion parameters needed to reproduce
 // the state of the conversation.
 type Message struct {
-	MessageID string                                   `json:"messageID,omitempty"` // Unique identifier for this message (like a commit hash).
-	ParentIDs []string                                 `json:"parentID,omitempty"`  // IDs of parent messages; usually one, but may be multiple if merged.
-	Timestamp time.Time                                `json:"timestamp,omitempty"` // Time the message was created.
-	Content   string                                   `json:"content,omitempty"`   // Human-readable message content.
-	Param     []openai.ChatCompletionMessageParamUnion `json:"param,omitempty"`     // OpenAI message parameters for model replay.
+	MessageID     string    `json:"messageID,omitempty"`     // Unique identifier for this message (like a commit hash).
+	ParentIDs     []string  `json:"parentID,omitempty"`      // IDs of parent messages; usually one, but may be multiple if merged.
+	Timestamp     time.Time `json:"timestamp,omitempty"`     // Time the message was created.
+	Role          string    `json:"role,omitempty"`          // Role of user that created message
+	Content       string    `json:"content,omitempty"`       // Message content.
+	ErrorResponse string    `json:"errorResponse,omitempty"` // Error response from OpenAI API
 }
 
 // Branch tracks a logical line of conversation development.
@@ -131,12 +132,12 @@ func StartNewConversation(client ChatClient, topic string) (*Conversation, error
 			jsonPart := errString[idx:]
 			var errResp OpenAIError
 			if e := json.Unmarshal([]byte(jsonPart), &errResp); e == nil {
-				message.Content = errResp.Message
+				message.ErrorResponse = errResp.Message
 			}
 		}
 	} else {
+		message.Role = string(completion.Choices[0].Message.Role)
 		message.Content = completion.Choices[0].Message.Content
-		message.Param = append(message.Param, completion.Choices[0].Message.ToParam())
 	}
 
 	// Set last messageID
