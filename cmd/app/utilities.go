@@ -227,19 +227,6 @@ func ConversationfromJSON(configPath string) (*Conversation, error) {
 	return &convo, nil
 }
 
-func CommitCoversation(conv *Conversation, path string) error {
-	writeData, err := StructToJSON(*conv)
-	if err != nil {
-		return err
-	}
-	err = WriteJSON(path, writeData)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func UpdateConversationID(yamlFile string, conversationID string) error {
 	f, err := os.ReadFile(yamlFile)
 	if err != nil {

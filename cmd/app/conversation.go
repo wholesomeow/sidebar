@@ -151,19 +151,16 @@ func StartNewConversation(client ChatClient, topic string) (*Conversation, error
 		message.Content = completion.Choices[0].Message.Content
 	}
 
-	// Set last messageID
-	convo.LastMessageID = message.MessageID
-
 	// TODO: Remove the commits from these functions and
 	// have whatever implements them call them (like the CLI or web app)
 
 	// Commit to move Head
-	if err := convo.Commit(&message); err != nil {
+	if err := convo.CommitHead(&message); err != nil {
 		return convo, fmt.Errorf("commit failed: %v", err)
 	}
 
 	// Commit to file
-	if err := CommitCoversation(convo, newPath); err != nil {
+	if err := convo.CommitCoversation(newPath); err != nil {
 		return nil, fmt.Errorf("error committing conversation: %w", err)
 	}
 
