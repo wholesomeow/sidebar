@@ -22,8 +22,8 @@
 
 #### Branches
 
-- [ ] `branch <name> -from <commit>` - Create a new branch from a commit
-- [ ] `checkout <name>` - Switch to the specified branch
+- [x] `branch <name> -from <commit>` - Create a new branch from a commit
+- [x] `checkout <name>` - Switch to the specified branch
 - [ ] `branch-delete <name>` - Delete a branch
 - [ ] `list branches` - List all branches
 

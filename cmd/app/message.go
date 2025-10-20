@@ -39,16 +39,13 @@ func SendMessage(client ChatClient, msg string) (string, error) {
 		Content:   msg,
 	}
 
-	// Update LastMessageID in conversation
-	convo.LastMessageID = userMessage.MessageID
-
 	// Commit to move Head
-	if err := convo.Commit(&userMessage); err != nil {
+	if err := convo.CommitHead(&userMessage); err != nil {
 		return userMessage.Content, fmt.Errorf("commit failed: %v", err)
 	}
 
 	// Commit to file
-	if err := CommitCoversation(convo, convo.Path); err != nil {
+	if err := convo.CommitCoversation(convo.Path); err != nil {
 		return "", fmt.Errorf("error committing updated conversation: %w", err)
 	}
 
@@ -78,16 +75,13 @@ func SendMessage(client ChatClient, msg string) (string, error) {
 		assistantMessage.Content = string(completion.Choices[0].Message.Content)
 	}
 
-	// Update LastMessageID in conversation
-	convo.LastMessageID = assistantMessage.MessageID
-
 	// Commit to move Head
-	if err := convo.Commit(&assistantMessage); err != nil {
+	if err := convo.CommitHead(&assistantMessage); err != nil {
 		return assistantMessage.Content, fmt.Errorf("commit failed: %v", err)
 	}
 
 	// Commit to file
-	if err := CommitCoversation(convo, convo.Path); err != nil {
+	if err := convo.CommitCoversation(convo.Path); err != nil {
 		return "", fmt.Errorf("error committing updated conversation: %w", err)
 	}
 
