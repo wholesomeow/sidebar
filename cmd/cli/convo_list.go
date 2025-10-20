@@ -9,8 +9,7 @@ import (
 )
 
 var sessionListConversationsCmd = &cobra.Command{
-	Use:  "list",
-	Args: cobra.ExactArgs(1),
+	Use: "list",
 	Run: func(cmd *cobra.Command, args []string) {
 		convo_names, err := app.ListConversations()
 		if err != nil {
@@ -22,12 +21,12 @@ var sessionListConversationsCmd = &cobra.Command{
 		fmt.Printf(`
 Conversation Name
 -------------------------------------------------
-		`)
+`)
 
 		for _, name := range convo_names {
 			fmt.Printf(`
 %s
-			`, name)
+`, name)
 		}
 	},
 }

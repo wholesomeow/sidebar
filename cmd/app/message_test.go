@@ -5,7 +5,6 @@ package app_test
 // Test message.go ------------------------------------------------------------
 
 // Pre-Test Steps
-// Create Fake Config Struct and File
 // Create Fake Covnersation Struct
 // Populate Conversation Struct with Message(s)
 // Write Conversation Struct to File
