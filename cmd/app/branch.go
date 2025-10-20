@@ -37,4 +37,7 @@ func (c *Conversation) Branch(name string, head string) {
 
 		// Populate branch context.summary (if applicable)
 	}
+
+	// Set HEAD
+	c.Head = currentBranch.BranchID
 }
