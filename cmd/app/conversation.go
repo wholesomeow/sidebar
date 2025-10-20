@@ -92,17 +92,6 @@ func StartNewConversation(client ChatClient, topic string) (*Conversation, error
 		return nil, fmt.Errorf("error renaming convo file: %w", err)
 	}
 
-	// Read/parse convo file
-	// Don't need to read in an existing conversation file because we're creating a new conversation here
-	// data, err := ReadJSON(newPath)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("error reading convo file: %w", err)
-	// }
-	// convo, err := JSONToStruct(data)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("error parsing convo JSON: %w", err)
-	// }
-
 	// Prepare OpenAI request
 	param := openai.ChatCompletionNewParams{
 		Messages: []openai.ChatCompletionMessageParamUnion{
