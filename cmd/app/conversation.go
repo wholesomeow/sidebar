@@ -27,14 +27,22 @@ type Message struct {
 	ErrorResponse string    `json:"errorResponse,omitempty"` // Error response from OpenAI API
 }
 
+type BranchContext struct {
+	Summary    string   `json:"summary"`    // Summary of current context window if/when it exceeds token threashold
+	History    []string `json:"history"`    // All of the messages in the branch history
+	Threashold float64  `json:"threashold"` // Token threashold (currently hardcoded, but eventually will populate based on model selected)
+	Count      float64  `json:"count"`      // Current context token count
+}
+
 // Branch tracks a logical line of conversation development.
 // It is analogous to a Git branch: a human-readable name, an ID, and
 // a reference to the latest message (head). Branches allow parallel
 // exploration of different conversation directions.
 type Branch struct {
-	Name     string `json:"name"`     // Display name of the branch (e.g., "experiment-1").
-	BranchID string `json:"branchID"` // Unique identifier for the branch.
-	HeadID   string `json:"headID"`   // ID of the latest message in this branch.
+	Name     string        `json:"name"`     // Display name of the branch (e.g., "experiment-1").
+	BranchID string        `json:"branchID"` // Unique identifier for the branch.
+	HeadID   string        `json:"headID"`   // ID of the latest message in this branch.
+	Context  BranchContext `json:"context"`  // Branch context, see above
 }
 
 // Conversation represents the full graph of a chat session.
@@ -64,6 +72,20 @@ type OpenAIError struct {
 	Code    string `json:"code"`
 }
 
+// Creates a new conversation
+func NewConversation(topic string, seed int64, conversationID string) *Conversation {
+	return &Conversation{
+		ConversationID: conversationID,
+		Seed:           0,
+		Topic:          topic,
+		Timestamp:      time.Now(),
+		Messages:       make(map[string]*Message),
+		Branches:       make(map[string]*Branch),
+		Head:           conversationID,
+		Archive:        false,
+	}
+}
+
 // StartNewSession creates a new session, initializes files, calls OpenAI, and returns display info.
 func StartNewConversation(client ChatClient, topic string) (*Conversation, error) {
 	// Start prepping session data
@@ -76,7 +98,7 @@ func StartNewConversation(client ChatClient, topic string) (*Conversation, error
 	// TODO: Read in the config here and change path from hardcoded to config.conversationFileLocation
 
 	// File handling
-	path := "./.sidebar"
+	path := "./.sidebar/conversations"
 	if _, err = os.Stat(path); os.IsNotExist(err) {
 		return nil, fmt.Errorf("config directory missing: %w", err)
 	}
@@ -172,7 +194,7 @@ func ListConversations() ([]string, error) {
 	// Read in conversation files location
 	entries, err := os.ReadDir(config.ConversationFileLocation)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error reading convo directory: %w", err)
 	}
 
 	var files []string
@@ -188,10 +210,12 @@ func ListConversations() ([]string, error) {
 		newPath := filepath.Join(config.ConversationFileLocation, file)
 		data, err := ReadJSON(newPath)
 		if err != nil {
+			fmt.Printf("errored on file %s", file)
 			return nil, fmt.Errorf("error reading convo file: %w", err)
 		}
 		convo, err := JSONToStruct(data)
 		if err != nil {
+			fmt.Printf("errored on file %s", file)
 			return nil, fmt.Errorf("error parsing convo JSON: %w", err)
 		}
 
