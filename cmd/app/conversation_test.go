@@ -18,9 +18,11 @@ func setupFakeSidebarEnv(t *testing.T) string {
 	// Create temp directories for testing
 	tmp := t.TempDir()
 	sidebarDir := filepath.Join(tmp, ".sidebar")
+	conversationsDir := filepath.Join(sidebarDir, "conversations")
 	templateDir := filepath.Join(tmp, "templates")
 
 	require.NoError(t, os.MkdirAll(sidebarDir, 0755))
+	require.NoError(t, os.MkdirAll(conversationsDir, 0755))
 	require.NoError(t, os.MkdirAll(templateDir, 0755))
 
 	// Fake template file
@@ -118,7 +120,7 @@ func TestStartNewConversation_TestTable(t *testing.T) {
 			},
 		},
 		{
-			name: "OpenAI Plain Rrror",
+			name: "OpenAI Plain Error",
 			setup: func(t *testing.T, baseDir string) {
 				setupFakeSidebarEnv(t)
 			},
@@ -129,6 +131,19 @@ func TestStartNewConversation_TestTable(t *testing.T) {
 			verify: func(t *testing.T, convo *app.Conversation) {
 				msg := convo.Messages[convo.LastMessageID]
 				require.Empty(t, msg.ErrorResponse)
+			},
+		},
+		{
+			name: "Validate Main Branch",
+			setup: func(t *testing.T, baseDir string) {
+				setupFakeSidebarEnv(t)
+			},
+			mockClient: &app.MockClient{
+				MockResponse: &app.MockCompletion,
+			},
+			expectErr: false,
+			verify: func(t *testing.T, convo *app.Conversation) {
+				require.Contains(t, convo.Branches[convo.MainBranchID].Name, "main")
 			},
 		},
 	}

@@ -2,8 +2,21 @@ package app
 
 import "fmt"
 
+// Create a new branch object
+func newBranch(name string, head string, id string, main bool) *Branch {
+	return &Branch{
+		Name:     name,
+		Main:     main,
+		BranchID: id,
+		HeadID:   head,
+		Context: BranchContext{
+			Threashold: 128000.00,
+		},
+	}
+}
+
 // Create a new branch from a given commit
-func (c *Conversation) Branch(name string, head string) {
+func (c *Conversation) Branch(name string, head string, main bool) {
 	branchID, _ := CreateUUIDv4()
 
 	// Get rough token size from previous messages
@@ -18,15 +31,9 @@ func (c *Conversation) Branch(name string, head string) {
 	}
 
 	// Populate branch
-	c.Branches[branchID] = &Branch{
-		Name:     name,
-		BranchID: branchID,
-		HeadID:   head,
-		Context: BranchContext{
-			History:    history,
-			Threashold: 128000.00,
-			Count:      tokenCount,
-		},
+	c.Branches[branchID] = newBranch(name, head, branchID, main)
+	if main {
+		c.MainBranchID = branchID
 	}
 
 	// If token amount is greater than context.threashold
