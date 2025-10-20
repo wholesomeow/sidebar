@@ -1,5 +1,7 @@
 package app
 
+import "fmt"
+
 func (c *Conversation) CommitCoversation(path string) error {
 	writeData, err := StructToJSON(*c)
 	if err != nil {
@@ -22,7 +24,14 @@ func (c *Conversation) CommitHead(message *Message) error {
 	if branch, ok := c.Branches[c.Head]; ok {
 		branch.HeadID = message.MessageID
 	} else {
-		c.Branches[c.Head] = &Branch{Name: c.Head, HeadID: message.MessageID}
+		id, _ := CreateUUIDv4()
+		branchName := fmt.Sprintf("auto-generated-branch-%s", id)
+		c.Branches[c.Head] = &Branch{
+			Name:     branchName,
+			Main:     false,
+			BranchID: id,
+			HeadID:   message.MessageID,
+		}
 	}
 
 	// Set last messageID

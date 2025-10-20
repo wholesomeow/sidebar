@@ -40,9 +40,10 @@ type BranchContext struct {
 // exploration of different conversation directions.
 type Branch struct {
 	Name     string        `json:"name"`     // Display name of the branch (e.g., "experiment-1").
+	Main     bool          `json:"main"`     // Denotes if branch is "main" or not.
 	BranchID string        `json:"branchID"` // Unique identifier for the branch.
 	HeadID   string        `json:"headID"`   // ID of the latest message in this branch.
-	Context  BranchContext `json:"context"`  // Branch context, see above
+	Context  BranchContext `json:"context"`  // Branch context, see above.
 }
 
 // Conversation represents the full graph of a chat session.
@@ -60,6 +61,7 @@ type Conversation struct {
 	LastMessageID  string              `json:"lastMessageID"`  // ID of the most recent message added (usually same as Head).
 	Messages       map[string]*Message `json:"messages"`       // All messages keyed by their IDs (conversation graph).
 	Pinned         map[string]*Message `json:"pinned"`         // Subset of messages marked as important/bookmarked, keyed by Message ID.
+	MainBranchID   string              `json:"mainBranchID"`   // ID of the "main" branch
 	Branches       map[string]*Branch  `json:"branches"`       // All branches, keyed by branch IDs.
 	Head           string              `json:"head"`           // ID of the current branch head (active pointer).
 	Archive        bool                `json:"archive"`        // Marks conversation as archived (read-only).
@@ -90,27 +92,26 @@ func NewConversation(topic string, seed int64, conversationID string) *Conversat
 func StartNewConversation(client ChatClient, topic string) (*Conversation, error) {
 	// Start prepping session data
 	var seed int64 = 1 // TODO: add random seed generator
-	conversationID, err := CreateUUIDv4()
-	if err != nil {
-		return nil, fmt.Errorf("error creating conversationID: %w", err)
-	}
+	conversationID, _ := CreateUUIDv4()
 
 	// TODO: Read in the config here and change path from hardcoded to config.conversationFileLocation
 
 	// File handling
-	path := "./.sidebar/conversations"
-	if _, err = os.Stat(path); os.IsNotExist(err) {
+	configPath := "./.sidebar"
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		return nil, fmt.Errorf("config directory missing: %w", err)
 	}
 
+	convoPath := "./.sidebar/conversations"
 	fileName := fmt.Sprintf("convo_%s.json", conversationID)
 	sourceFilePath := "templates/convo.json"
-	if err = CopyFile(sourceFilePath, path); err != nil {
+	if err := CopyFile(sourceFilePath, convoPath); err != nil {
 		return nil, fmt.Errorf("error copying template: %w", err)
 	}
-	oldPath := filepath.Join(path, "convo.json")
-	newPath := filepath.Join(path, fileName)
-	if err = os.Rename(oldPath, newPath); err != nil {
+
+	oldPath := filepath.Join(convoPath, "convo.json")
+	newPath := filepath.Join(convoPath, fileName)
+	if err := os.Rename(oldPath, newPath); err != nil {
 		return nil, fmt.Errorf("error renaming convo file: %w", err)
 	}
 
@@ -151,8 +152,8 @@ func StartNewConversation(client ChatClient, topic string) (*Conversation, error
 		message.Content = completion.Choices[0].Message.Content
 	}
 
-	// TODO: Remove the commits from these functions and
-	// have whatever implements them call them (like the CLI or web app)
+	// Create "main" branch for conversation
+	convo.Branch("main", message.MessageID, true)
 
 	// Commit to move Head
 	if err := convo.CommitHead(&message); err != nil {
@@ -160,12 +161,12 @@ func StartNewConversation(client ChatClient, topic string) (*Conversation, error
 	}
 
 	// Commit to file
-	if err := convo.CommitCoversation(newPath); err != nil {
+	if err := convo.CommitCoversation(convo.Path); err != nil {
 		return nil, fmt.Errorf("error committing conversation: %w", err)
 	}
 
 	// Update config
-	yamlFile := filepath.Join(path, "sidebar-config.yaml")
+	yamlFile := filepath.Join(configPath, "sidebar-config.yaml")
 	if err := UpdateConversationID(yamlFile, conversationID); err != nil {
 		return nil, fmt.Errorf("error updating conversationID: %w", err)
 	}
