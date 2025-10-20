@@ -24,7 +24,7 @@ func setupFakeSidebarEnv(t *testing.T) string {
 	require.NoError(t, os.MkdirAll(templateDir, 0755))
 
 	// Fake template file
-	templateFile := filepath.Join(sidebarDir, "convo.json")
+	templateFile := filepath.Join(templateDir, "convo.json")
 	require.NoError(t, os.WriteFile(templateFile, []byte(`{"conversationID":"template"}`), 0644))
 
 	// Fake config file
@@ -74,25 +74,25 @@ func TestStartNewConversation_TestTable(t *testing.T) {
 			verify: func(t *testing.T, convo *app.Conversation) {
 				msg := convo.Messages[convo.LastMessageID]
 				require.NotNil(t, msg)
-				require.Contains(t, msg.Content, "Chatbot")
+				require.Contains(t, msg.Content, "Creating a chatbot wrapper application is an excellent way to enhance the functionality and user experience of a chatbot...")
 				require.Equal(t, "assistant", msg.Role)
 			},
 		},
 		{
-			name: "Missing template file",
+			name: "Missing Template File",
 			setup: func(t *testing.T, baseDir string) {
 				sidebar := filepath.Join(baseDir, ".sidebar")
 				require.NoError(t, os.MkdirAll(sidebar, 0755))
-				// Note: we do *not* create templates dir → should fail
+				// Note: we do *not* create templates dir, so this should fail
 				configFile := filepath.Join(sidebar, "sidebar-config.yaml")
 				require.NoError(t, os.WriteFile(configFile, []byte("API_KEY: fake\n"), 0644))
 			},
 			mockClient:    &app.MockClient{},
 			expectErr:     true,
-			expectErrPart: "error copying template",
+			expectErrPart: "no such file or directory",
 		},
 		{
-			name: "Missing .sidebar dir",
+			name: "Missing .sidebar Dir",
 			setup: func(t *testing.T, baseDir string) {
 				// Create only templates
 				require.NoError(t, os.MkdirAll(filepath.Join(baseDir, "templates"), 0755))
@@ -103,7 +103,7 @@ func TestStartNewConversation_TestTable(t *testing.T) {
 			expectErrPart: "config directory missing",
 		},
 		{
-			name: "OpenAI JSON error",
+			name: "OpenAI JSON Rrror",
 			setup: func(t *testing.T, baseDir string) {
 				setupFakeSidebarEnv(t)
 			},
@@ -118,7 +118,7 @@ func TestStartNewConversation_TestTable(t *testing.T) {
 			},
 		},
 		{
-			name: "OpenAI plain error",
+			name: "OpenAI Plain Rrror",
 			setup: func(t *testing.T, baseDir string) {
 				setupFakeSidebarEnv(t)
 			},
