@@ -18,14 +18,13 @@
 - [ ] `correction` "<message>" - Provide a correction to the previous message
 - [x] `pin "<message-id>"` - Pin a message for quick reference
 - [x] `commit` - Commit current conversation
-- [ ] `diff <commitA> <commitB>` - Show differences between two commits or conversation branches
 
-#### Branches
+#### Branches - v1 DONE
 
 - [x] `branch <name> -from <commit>` - Create a new branch from a commit
 - [x] `checkout <name>` - Switch to the specified branch
-- [ ] `branch-delete <name>` - Delete a branch
-- [ ] `list branches` - List all branches
+- [x] `branch-delete <name>` - Delete a branch
+- [x] `list branches` - List all branches
 
 #### Tangents
 
@@ -35,9 +34,10 @@
 - [ ] `tangent-resolve all` - Resolve all tangents
 - [ ] `tangent-list` - List all open tangents
 
-#### Merges
+#### Merges & Diff
 
 - [ ] `merge <branchA> <branchB> -m "<msg>"` - Merge branches with a message
+- [ ] `diff <commitA> <commitB>` - Show differences between two commits or conversation branches
 
 #### Hooks
 
