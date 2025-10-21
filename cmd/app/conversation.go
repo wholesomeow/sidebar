@@ -13,6 +13,8 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// TODO: Convert all the UUID fields from strings into a custom UUID type
+
 // Message represents a single entry in a conversation graph.
 // Each message can have one or more parents, allowing for branching
 // (similar to commits in Git). Messages hold both the raw user/assistant
