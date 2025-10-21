@@ -82,6 +82,7 @@ func NewConversation(topic string, seed int64, conversationID string) *Conversat
 		Topic:          topic,
 		Timestamp:      time.Now(),
 		Messages:       make(map[string]*Message),
+		Pinned:         make(map[string]*Message),
 		Branches:       make(map[string]*Branch),
 		Head:           conversationID,
 		Archive:        false,
