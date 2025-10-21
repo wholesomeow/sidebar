@@ -66,3 +66,29 @@ func (c *Conversation) Branch(name string, head string, main bool) string {
 
 	return branchID
 }
+
+// Return a list of all branches in a coversation
+func (c *Conversation) ListBranches() []string {
+	branchList := []string{}
+	for key := range c.Branches {
+		branchList = append(branchList, key)
+	}
+
+	return branchList
+}
+
+// Delete a branch
+func (c *Conversation) DeleteBranch(branchID string) bool {
+	// Don't do anything if conversation is Archived
+	if c.Archive {
+		return false
+	}
+
+	// Check if branch exists
+	if _, exists := c.Branches[branchID]; exists {
+		delete(c.Branches, branchID)
+		return true
+	}
+
+	return false
+}

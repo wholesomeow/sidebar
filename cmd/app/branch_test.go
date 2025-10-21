@@ -58,6 +58,28 @@ func TestBranchConversation_TestTable(t *testing.T) {
 				require.Len(t, convo.Branches, 1)
 			},
 		},
+		{
+			name: "Delete Branch",
+			setup: func(t *testing.T, baseDir string) {
+				setupFakeSidebarEnv(t)
+			},
+			mockClient: &app.MockClient{
+				MockResponse: &app.MockCompletion,
+			},
+			expectErr: false,
+			verify: func(t *testing.T, convo *app.Conversation) {
+				branchID := convo.Branch("test", convo.LastMessageID, false)
+				require.Len(t, convo.Branches, 2)
+
+				branch := convo.Branches[branchID]
+				require.Contains(t, branch.Name, "test")
+				require.False(t, branch.Main)
+
+				res := convo.DeleteBranch(branchID)
+				require.True(t, res)
+				require.Len(t, convo.Branches, 1)
+			},
+		},
 	}
 
 	// Test the test cases in the table
