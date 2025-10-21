@@ -11,12 +11,27 @@ func newBranch(name string, head string, id string, main bool) *Branch {
 		HeadID:   head,
 		Context: BranchContext{
 			Threashold: 128000.00,
+			Count:      0,
 		},
 	}
 }
 
+// TODO: Make bool param optional
 // Create a new branch from a given commit
-func (c *Conversation) Branch(name string, head string, main bool) {
+func (c *Conversation) Branch(name string, head string, main bool) string {
+	// Don't do anything if conversation is Archived
+	if c.Archive {
+		return ""
+	}
+
+	// Double-check that maps exist
+	if c.Branches == nil {
+		return ""
+	}
+	if c.Messages == nil {
+		return ""
+	}
+
 	branchID, _ := CreateUUIDv4()
 
 	// Get rough token size from previous messages
@@ -32,9 +47,7 @@ func (c *Conversation) Branch(name string, head string, main bool) {
 
 	// Populate branch
 	c.Branches[branchID] = newBranch(name, head, branchID, main)
-	if main {
-		c.MainBranchID = branchID
-	}
+	c.Branches[branchID].Context.History = history
 
 	// If token amount is greater than context.threashold
 	// auto summarize context
@@ -47,4 +60,9 @@ func (c *Conversation) Branch(name string, head string, main bool) {
 
 	// Set HEAD
 	c.Head = currentBranch.BranchID
+	if main {
+		c.MainBranchID = branchID
+	}
+
+	return branchID
 }

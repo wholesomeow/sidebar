@@ -1,15 +1,15 @@
 package app
 
-func (c *Conversation) ArchiveConversation() error {
-	// Set archive param
-	c.Archive = true
-
-	return nil
+// Set archive param
+func (c *Conversation) ArchiveConversation() {
+	if !c.Archive {
+		c.Archive = true
+	}
 }
 
-func (c *Conversation) UnarchiveConversation() error {
-	// Set archive param
-	c.Archive = false
-
-	return nil
+// Set archive param
+func (c *Conversation) UnarchiveConversation() {
+	if c.Archive {
+		c.Archive = false
+	}
 }
