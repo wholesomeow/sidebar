@@ -34,3 +34,6 @@ go.work.sum
 # application specific ignores
 build/
 .sidebar/
+ui/backend/
+ui/node_modules
+ui/dist/
