@@ -16,7 +16,7 @@ import (
 // TODO: Reorganize functions so it's not a bland utility file
 
 // CopyFile copies a file from src to dst.
-func CopyFile(src, dstDir string) error {
+func CopyFile(src string, dstDir string) error {
 	// Open the source file for reading
 	srcFile, err := os.Open(src)
 	if err != nil {

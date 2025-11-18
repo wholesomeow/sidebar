@@ -1,15 +1,13 @@
 const { app, BrowserWindow } = require('electron');
 const { spawn } = require('child_process');
 const path = require('path');
-const isDev = require('election-is-dev');
+const isDev = require('electron-is-dev');
 
 function startBackend() {
   // TODO: Replace ternaries with actual if/else statements
-  const exe = process.platform === "win32" ? "sidebar_backend.exe" : "sidebar_backend";
-
+  const exe = process.platform === "win32" ? "sidebar.exe" : "sidebar";
   const backendPath = path.join(process.resourcesPath, "backend", exe);
   const devPath = path.join(__dirname, "backend", exe);
-
   const binary = isDev ? devPath : backendPath;
 
   const child = spawn(binary, [], { stdio: "pipe" });
@@ -18,6 +16,26 @@ function startBackend() {
   child.stderr.on("data", (data) => console.error(`[Go Backend Error]: ${data}`));
 
   return child;
+}
+
+function startViteDevServer() {
+  if (!isDev) return Promise.resolve();
+  
+  console.log("Starting Vite dev server...");
+  viteProcess = spawn('npm', ['run', 'dev'], { cwd: __dirname, shell: true, stdio: 'inherit' });
+
+  // Wait until the dev server is ready (simple wait for localhost:5173)
+  return new Promise((resolve) => {
+    const net = require('net');
+    const interval = setInterval(() => {
+      const client = net.createConnection({ port: 5173 }, () => {
+        clearInterval(interval);
+        console.log("Vite dev server ready!");
+        resolve();
+      });
+      client.on('error', () => client.destroy());
+    }, 100);
+  });
 }
 
 function createWindow() {
@@ -36,8 +54,10 @@ function createWindow() {
   }
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   startBackend();
+
+  if (isDev) await startViteDevServer();
   createWindow();
 
   app.on('activate', () => {
@@ -48,7 +68,6 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+  if (viteProcess) viteProcess.kill();
+  if (process.platform !== 'darwin') app.quit();
 });

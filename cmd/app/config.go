@@ -25,16 +25,29 @@ type Config struct {
 //   - nil on success.
 //   - error if the directory cannot be created or the template cannot be copied.
 func SetupConfig() error {
-	// TODO: Un-hard code this so I can test it
-	path := "./.sidebar"
-	sourceFilePath := "templates/sidebar-config.yaml"
+	// Get the directory where the binary is running
+	exePath, err := os.Executable()
+	if err != nil {
+		return fmt.Errorf("cannot get executable path: %w", err)
+	}
+	exeDir := filepath.Dir(exePath)
 
-	_, err := os.Stat(path)
+	// Config directory relative to binary
+	configDir := filepath.Join(exeDir, ".sidebar")
+	sourceFilePath := filepath.Join(exeDir, "templates", "sidebar-config.yaml")
+
+	cwd, _ := os.Getwd()
+	fmt.Println("Current working directory:", cwd)
+	fmt.Println("Config directory:", configDir)
+	fmt.Println("Looking for:", sourceFilePath)
+
+	_, err = os.Stat(configDir)
 	if os.IsNotExist(err) {
-		if err = os.MkdirAll(path, 0755); err != nil {
+		// Directory doesn't exist, create it
+		if err := os.MkdirAll(configDir, 0755); err != nil {
 			return fmt.Errorf("error creating directory: %w", err)
 		}
-		if err = CopyFile(sourceFilePath, path); err != nil {
+		if err := CopyFile(sourceFilePath, configDir); err != nil {
 			return fmt.Errorf("error copying file: %w", err)
 		}
 	}
@@ -53,7 +66,15 @@ func SetupConfig() error {
 //   - A masked string version of the API key (e.g., `abc...xyz`) on success.
 //   - An error if the config file cannot be read, parsed, or contains no key.
 func InitAPIKey() (string, error) {
-	yamlFile := filepath.Join("./.sidebar", "sidebar-config.yaml")
+	// Get the directory where the binary is running
+	exePath, err := os.Executable()
+	if err != nil {
+		return "", fmt.Errorf("cannot get executable path: %w", err)
+	}
+	exeDir := filepath.Dir(exePath)
+
+	// Config directory relative to binary
+	yamlFile := filepath.Join(exeDir, ".sidebar", "sidebar-config.yaml")
 	f, err := os.ReadFile(yamlFile)
 	if err != nil {
 		return "", fmt.Errorf("error reading file %s: %w", yamlFile, err)

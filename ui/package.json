@@ -4,7 +4,7 @@
   "main": "main.cjs",
   "type": "module",
   "scripts": {
-    "start": "electron .",
+    "start": "npx electron .",
     "dev": "vite",
     "build": "vite build",
     "package": "electron-builder --dir",
@@ -56,6 +56,7 @@
     }
   },
   "dependencies": {
+    "electron-is-dev": "^3.0.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   }

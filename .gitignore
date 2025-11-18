@@ -35,5 +35,5 @@ go.work.sum
 build/
 .sidebar/
 ui/backend/
-ui/node_modules
+ui/node_modules/
 ui/dist/
