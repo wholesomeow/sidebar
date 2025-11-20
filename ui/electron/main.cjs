@@ -6,9 +6,15 @@ const isDev = require('electron-is-dev');
 function startBackend() {
   // TODO: Replace ternaries with actual if/else statements
   const exe = process.platform === "win32" ? "sidebar.exe" : "sidebar";
-  const backendPath = path.join(process.resourcesPath, "backend", exe);
-  const devPath = path.join(__dirname, "backend", exe);
+  const backendPath = path.join(process.resourcesPath, "../backend", exe);
+  const devPath = path.join(__dirname, "../backend", exe);
   const binary = isDev ? devPath : backendPath;
+
+  console.log("Binary path:", binary);
+  console.log("Dev Path: ", devPath);
+  const fs = require("fs");
+  console.log("Binary exists?", fs.existsSync(binary));
+
 
   const child = spawn(binary, [], { stdio: "pipe" });
 
@@ -50,7 +56,7 @@ function createWindow() {
   if (isDev) {
     win.loadURL('http://localhost:5173');
   } else {
-    win.loadFile(path.join(__dirname, 'dist', 'index.html'));
+    win.loadFile(path.join(__dirname, '../dist/index.html'));
   }
 }
 

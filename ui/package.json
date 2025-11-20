@@ -1,7 +1,8 @@
 {
   "name": "ui",
   "version": "1.0.0",
-  "main": "main.cjs",
+  "main": "electron/main.cjs",
+  "type": "module",
   "scripts": {
     "start": "npx electron .",
     "dev": "vite",

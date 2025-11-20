@@ -3,10 +3,9 @@
 set -euo pipefail
 
 # Set logging variables
-timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 LOG_DIR="./build/logs"
 mkdir -p "$LOG_DIR"
-LOG_FILE="$LOG_DIR/build-$timestamp.log"
+LOG_FILE="$LOG_DIR/build.log"
 
 # Other variables
 BINARY_NAME="sidebar"
@@ -35,6 +34,15 @@ run_cmd() {
   fi
 }
 
+# Bunch of stuff for DBUS issues
+sudo service dbus start
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+sudo mkdir -p $XDG_RUNTIME_DIR
+sudo chmod 700 $XDG_RUNTIME_DIR
+sudo chown $(id -un):$(id -gn) $XDG_RUNTIME_DIR
+export DBUS_SESSION_BUS_ADDRESS=unix:path=$XDG_RUNTIME_DIR/bus
+dbus-daemon --session --address=$DBUS_SESSION_BUS_ADDRESS --nofork --nopidfile --syslog-only &
+
 if [ -z $1 ]; then
   echo "Must provide build mode as argument"
   echo "Options are:"
@@ -54,6 +62,9 @@ case $1 in
     log INFO "Cleaning old builds"
     rm -f build/$BINARY_NAME
     rm -f $BACKEND_DIR/$BINARY_NAME
+
+    log INFO "Exporting NO_AT_BRIDGE"
+    export NO_AT_BRIDGE=1
 
     log INFO "Running Go tests"
     run_cmd go test ./... -v
@@ -80,6 +91,9 @@ case $1 in
     rm -f build/$BINARY_NAME
     rm -f $BACKEND_DIR/$BINARY_NAME
 
+    log INFO "Exporting NO_AT_BRIDGE"
+    export NO_AT_BRIDGE=1
+
     log INFO "Running Go tests"
     run_cmd go test ./... -v
 
@@ -95,13 +109,18 @@ case $1 in
     cp -r templates/ $BACKEND_DIR/
 
     log INFO "Starting Vite + Electron dev mode..."
-    (
-      cd $ELECTRON_DIR
-      npm install electron-is-dev
 
-      # Run electron
-      NODE_ENV=development npm start
-    )
+    log INFO "Setting new LOG_DIR for npm commands"
+    LOG_FILE=../build/logs/build.log
+
+    cd $ELECTRON_DIR
+    run_cmd npm install electron-is-dev
+
+    # Run electron
+    run_cmd NODE_ENV=development npm start
+
+    LOG_FILE="$LOG_DIR/build.log"
+    log INFO "Setting LOG_DIR back"
     ;;
     
   release-build )
