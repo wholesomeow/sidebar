@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"fmt"
+
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
 	"github.com/wholesomeow/chatwrapper/cmd/api"
@@ -11,6 +13,7 @@ var startServer = &cobra.Command{
 	Short: "Start the Sidebar backend",
 	Long:  "Starts the Sidebar Gin backend for the Sidebar webapp",
 	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("Server starting...")
 		r := gin.Default()
 
 		endpoints := r.Group("/api/v1")
@@ -32,6 +35,8 @@ var startServer = &cobra.Command{
 		}
 
 		r.Run(":8080")
+
+		fmt.Println("Server successfully started!")
 	},
 }
 
