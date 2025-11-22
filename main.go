@@ -7,4 +7,7 @@ import (
 func main() {
 	// Start the CLI itself
 	cli.Execute()
+
+	// Start the backend server
+	cli.Start()
 }
