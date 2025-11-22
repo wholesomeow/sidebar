@@ -13,28 +13,24 @@ type FakeData struct {
 	Data string
 }
 
-type Conversations struct {
-	Conversations []string
-}
-
 func ListConversations(c *gin.Context) {
 	// Call the function and process any errors
-	conversations, err := app.ListConversations()
+	// Frontend can send ?path=...
+	folderPath := c.Query("path")
+	conversations, err := app.ListConversations(folderPath)
 	if err != nil {
 		msg := fmt.Sprintf("Conversation collection failed: %s", err)
 		status, response := Response500(msg)
 		c.JSON(status, response)
-	}
 
-	conversations_list := Conversations{
-		Conversations: conversations,
+		return
 	}
 
 	// Populate the context
 	c.JSON(http.StatusOK, Response{
 		Status:    http.StatusText(http.StatusOK),
 		Message:   "Conversations listed successfully",
-		Data:      conversations_list,
+		Data:      conversations,
 		Timestamp: time.Now(),
 	})
 }
@@ -50,6 +46,8 @@ func CreateConversation(c *gin.Context) {
 		msg := fmt.Sprintf("Failed to create new Conversation: %s", err)
 		status, response := Response500(msg)
 		c.JSON(status, response)
+
+		return
 	}
 
 	// Process data
@@ -58,6 +56,8 @@ func CreateConversation(c *gin.Context) {
 		msg := fmt.Sprintf("Failed to parse conversation to JSON: %s", err)
 		status, response := Response500(msg)
 		c.JSON(status, response)
+
+		return
 	}
 
 	// Populate the context

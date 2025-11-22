@@ -186,8 +186,8 @@ func JSONToStruct(data []byte) (*Conversation, error) {
 }
 
 // StructToJSON marshals a Conversation struct back to pretty-printed JSON
-func StructToJSON(conv Conversation) ([]byte, error) {
-	data, err := json.MarshalIndent(conv, "", "  ")
+func StructToJSON(str any) ([]byte, error) {
+	data, err := json.MarshalIndent(str, "", "  ")
 	if err != nil {
 		return nil, fmt.Errorf("error marshaling struct to JSON: %w", err)
 	}

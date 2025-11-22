@@ -76,6 +76,14 @@ type OpenAIError struct {
 	Code    string `json:"code"`
 }
 
+// Struct that holds the data requested by the frontend
+// for listing all conversations
+type ConversationListItem struct {
+	Name string `json:"name"`
+	Type string `json:"type"`
+	Path string `json:"path"`
+}
+
 // Creates a new conversation
 func NewConversation(topic string, seed int64, conversationID string) *Conversation {
 	return &Conversation{
@@ -178,9 +186,11 @@ func StartNewConversation(client ChatClient, topic string) (*Conversation, error
 }
 
 // List all conversations you have with chatbot
-func ListConversations() ([]string, error) {
-	// Read in config file
-	configPath := "./.sidebar/sidebar-config.yaml"
+func ListConversations(folderPath string) ([]ConversationListItem, error) {
+	// Read in config file relative to where the binary runs
+	exePath, _ := os.Executable()
+	exeDir := filepath.Dir(exePath)
+	configPath := filepath.Join(exeDir, ".sidebar", "sidebar-config.yaml")
 	configFile, err := os.ReadFile(configPath)
 	if err != nil {
 		return nil, fmt.Errorf("error reading config: %w", err)
@@ -193,35 +203,50 @@ func ListConversations() ([]string, error) {
 	}
 
 	// Read in conversation files location
-	entries, err := os.ReadDir(config.ConversationFileLocation)
+	var convoFileLoc string
+	if folderPath != "" {
+		// If the frontend requested a specific folder, use it
+		convoFileLoc = folderPath
+	} else {
+		// Otherwise, use the default root folder
+		convoFileLoc = filepath.Join(exeDir, config.ConversationFileLocation)
+	}
+
+	entries, err := os.ReadDir(convoFileLoc)
 	if err != nil {
 		return nil, fmt.Errorf("error reading convo directory: %w", err)
 	}
 
-	var files []string
+	var results []ConversationListItem
 	for _, entry := range entries {
-		if !entry.IsDir() {
-			files = append(files, entry.Name())
+		if entry.IsDir() {
+			results = append(results, ConversationListItem{
+				Name: entry.Name(),
+				Type: "folder",
+				Path: filepath.Join(convoFileLoc, entry.Name()),
+			})
+			continue
 		}
-	}
 
-	var convo_names []string
-	for _, file := range files {
 		// Read/parse convo file
-		newPath := filepath.Join(config.ConversationFileLocation, file)
+		newPath := filepath.Join(convoFileLoc, entry.Name())
 		data, err := ReadJSON(newPath)
 		if err != nil {
-			fmt.Printf("errored on file %s", file)
+			fmt.Printf("errored on file %s", entry.Name())
 			return nil, fmt.Errorf("error reading convo file: %w", err)
 		}
 		convo, err := JSONToStruct(data)
 		if err != nil {
-			fmt.Printf("errored on file %s", file)
+			fmt.Printf("errored on file %s", entry.Name())
 			return nil, fmt.Errorf("error parsing convo JSON: %w", err)
 		}
 
-		convo_names = append(convo_names, convo.Name)
+		results = append(results, ConversationListItem{
+			Name: convo.Name,
+			Type: "file",
+			Path: convo.Path,
+		})
 	}
 
-	return convo_names, nil
+	return results, nil
 }

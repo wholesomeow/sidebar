@@ -30,7 +30,8 @@ func Response500(msg string) (int, Response) {
 	status := http.StatusInternalServerError
 	response := Response{
 		Status:    http.StatusText(status),
-		Message:   msg,
+		Message:   "Internal Server Error",
+		Error:     msg,
 		Timestamp: time.Now(),
 	}
 

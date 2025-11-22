@@ -1,4 +1,4 @@
-import Sidebar from './components/Sidebar';
+import Sidebar from './components/ConversationPanel';
 import ChatPanel from './components/ChatPanel';
 import RightPanel from './components/RightPanel';
 
