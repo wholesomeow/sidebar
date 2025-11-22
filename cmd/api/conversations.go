@@ -1,7 +1,6 @@
 package api
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -31,13 +30,11 @@ func ListConversations(c *gin.Context) {
 		Conversations: conversations,
 	}
 
-	data, _ := json.MarshalIndent(conversations_list, "", "  ")
-
 	// Populate the context
 	c.JSON(http.StatusOK, Response{
 		Status:    http.StatusText(http.StatusOK),
 		Message:   "Conversations listed successfully",
-		Data:      data,
+		Data:      conversations_list,
 		Timestamp: time.Now(),
 	})
 }
