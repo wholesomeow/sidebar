@@ -80,6 +80,7 @@ type OpenAIError struct {
 // for listing all conversations
 type ConversationListItem struct {
 	Name string `json:"name"`
+	ID   string `json:"id"`
 	Type string `json:"type"`
 	Path string `json:"path"`
 }
@@ -243,10 +244,43 @@ func ListConversations(folderPath string) ([]ConversationListItem, error) {
 
 		results = append(results, ConversationListItem{
 			Name: convo.Name,
+			ID:   convo.ConversationID,
 			Type: "file",
 			Path: convo.Path,
 		})
 	}
 
 	return results, nil
+}
+
+func GetConversation(id string) (*Conversation, error) {
+	// Read in config file relative to where the binary runs
+	exePath, _ := os.Executable()
+	exeDir := filepath.Dir(exePath)
+	configPath := filepath.Join(exeDir, ".sidebar", "sidebar-config.yaml")
+	configFile, err := os.ReadFile(configPath)
+	if err != nil {
+		return nil, fmt.Errorf("error reading config: %w", err)
+	}
+
+	// Dump to struct
+	var config Config
+	if err := yaml.Unmarshal(configFile, &config); err != nil {
+		return nil, fmt.Errorf("error unmarshaling YAML: %w", err)
+	}
+
+	// Read in conversation file
+	convoFileLoc := filepath.Join(exeDir, config.ConversationFileLocation)
+	fileName := fmt.Sprintf("%s.json", id)
+	convoFile := filepath.Join(convoFileLoc, fileName)
+	data, err := os.ReadFile(convoFile)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read conversation: %w", err)
+	}
+
+	var convo Conversation
+	if err := json.Unmarshal(data, &convo); err != nil {
+		return nil, fmt.Errorf("failed to parse conversation JSON: %w", err)
+	}
+	return &convo, nil
 }

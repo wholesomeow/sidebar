@@ -3,17 +3,23 @@ import { useState, useEffect } from "react";
 
 interface ConversationListItem {
   name: string;
+  id: string;
   type: "file" | "folder";
   path: string;
+}
+
+interface ConversationPanelProps {
+  onSelectConversation: (id: string) => void;
 }
 
 interface FolderContentsProps {
   path: string;
   expandedFolders: Set<string>;
   toggleFolder: (path: string) => void;
+  onSelectConversation: (path: string) => void;
 }
 
-function FolderContents({ path, expandedFolders, toggleFolder }: FolderContentsProps) {
+function FolderContents({ path, expandedFolders, toggleFolder, onSelectConversation }: FolderContentsProps) {
   const [contents, setContents] = useState<ConversationListItem[]>([]);
 
   useEffect(() => {
@@ -26,7 +32,11 @@ function FolderContents({ path, expandedFolders, toggleFolder }: FolderContentsP
   return (
     <ul className="ml-4 border-l border-gray-300 pl-2">
       {contents.map(item => (
-        <li key={item.path} className="p-1 rounded hover:bg-gray-100 cursor-pointer">
+        <li
+          key={item.path}
+          className="p-1 rounded hover:bg-gray-100"
+          onClick={() => item.type === "file" && onSelectConversation(item.id)}
+        >
           {item.type === "folder" ? (
             <div className="flex items-center gap-2" onClick={() => toggleFolder(item.path)}>
               {expandedFolders.has(item.path) ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
@@ -43,6 +53,7 @@ function FolderContents({ path, expandedFolders, toggleFolder }: FolderContentsP
               path={item.path}
               expandedFolders={expandedFolders}
               toggleFolder={toggleFolder}
+              onSelectConversation={onSelectConversation}
             />
           )}
         </li>
@@ -51,7 +62,7 @@ function FolderContents({ path, expandedFolders, toggleFolder }: FolderContentsP
   );
 }
 
-export default function ConversationPanel() {
+export default function ConversationPanel({ onSelectConversation }: ConversationPanelProps) {
   const [items, setItems] = useState<ConversationListItem[]>([]);
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
 
@@ -84,8 +95,7 @@ export default function ConversationPanel() {
   return (
     <div className="w-64 bg-gray-100 border-r border-gray-300 p-2 overflow-y-auto">
       {/* Top Toolbar */}
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="text-lg font-bold mb-4">Conversations</h2>
+      <div className="flex items-center justify-center mb-2">
         <div className="flex gap-2">
           <button className="p-1 rounded hover:bg-gray-200" title="New Conversation">
             <MessageSquarePlus size={18} />
@@ -102,7 +112,11 @@ export default function ConversationPanel() {
       {/* Conversation List */}
       <ul>
         {items.map(item => (
-          <li key={item.path} className="p-2 rounded hover:bg-gray-200 cursor-pointer">
+          <li
+            key={item.path}
+            className="p-2 rounded hover:bg-gray-200"
+            onClick={() => item.type === "file" && onSelectConversation(item.id)}
+          >
             {item.type === "folder" ? (
               <div className="flex items-center gap-2" onClick={() => toggleFolder(item.path)}>
                 {expandedFolders.has(item.path) ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
@@ -119,6 +133,7 @@ export default function ConversationPanel() {
                 path={item.path}
                 expandedFolders={expandedFolders}
                 toggleFolder={toggleFolder}
+                onSelectConversation={onSelectConversation}
               />
             )}
           </li>

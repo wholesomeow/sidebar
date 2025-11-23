@@ -45,7 +45,7 @@ func StartBackendServer() {
 			msg := convo.Group("/:id/messages")
 			{
 				msg.POST("", api.SendMessage)
-				msg.GET("/:msg_id", api.GetMessage)
+				msg.GET("", api.GetMessages)
 				msg.DELETE("/:msg_id", api.DeleteMessage)
 			}
 		}

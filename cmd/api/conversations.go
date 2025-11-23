@@ -70,20 +70,23 @@ func CreateConversation(c *gin.Context) {
 }
 
 func GetConversation(c *gin.Context) {
-	// TODO: Implement ConversationID as passed param to then get conversation data
-	// if err != nil {
-	// 	msg := fmt.Sprintf("NPC name generation failed: %s", err)
-	// 	status, response := Response500(msg)
-	// 	c.JSON(status, response)
-	// }
+	// Call the function and process any errors
+	// Frontend can send ?path=...
+	folderPath := c.Query("path")
+	convo, err := app.GetConversation(folderPath)
+	if err != nil {
+		msg := fmt.Sprintf("Failed to get messages from conversation: %s", err)
+		status, response := Response500(msg)
+		c.JSON(status, response)
+
+		return
+	}
 
 	// Populate the context
 	c.JSON(http.StatusOK, Response{
-		Status:  http.StatusText(http.StatusOK),
-		Message: "Conversations listed successfully",
-		Data: FakeData{
-			Data: "Wow, look at all this data",
-		},
+		Status:    http.StatusText(http.StatusOK),
+		Message:   "Conversations listed successfully",
+		Data:      convo,
 		Timestamp: time.Now(),
 	})
 }

@@ -25,6 +25,8 @@ func SendMessage(c *gin.Context) {
 		msg := fmt.Sprintf("Failed to send message: %s", err)
 		status, response := Response500(msg)
 		c.JSON(status, response)
+
+		return
 	}
 
 	message := SingleMessage{
@@ -42,21 +44,24 @@ func SendMessage(c *gin.Context) {
 	})
 }
 
-func GetMessage(c *gin.Context) {
-	// TODO: Implement MessageID as passed param to then get message data
-	// if err != nil {
-	// 	msg := fmt.Sprintf("NPC name generation failed: %s", err)
-	// 	status, response := Response500(msg)
-	// 	c.JSON(status, response)
-	// }
+func GetMessages(c *gin.Context) {
+	// Call the function and process any errors
+	// Frontend can send /:id/...
+	id := c.Param("id")
+	convo, err := app.GetConversation(id)
+	if err != nil {
+		msg := fmt.Sprintf("Failed to get messages from conversation: %s", err)
+		status, response := Response500(msg)
+		c.JSON(status, response)
+
+		return
+	}
 
 	// Populate the context
 	c.JSON(http.StatusOK, Response{
-		Status:  http.StatusText(http.StatusOK),
-		Message: "Conversations listed successfully",
-		Data: FakeData{
-			Data: "Wow, look at all this data",
-		},
+		Status:    http.StatusText(http.StatusOK),
+		Message:   "Conversations listed successfully",
+		Data:      convo.Messages,
 		Timestamp: time.Now(),
 	})
 }
