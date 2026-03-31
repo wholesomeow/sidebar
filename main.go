@@ -9,5 +9,5 @@ func main() {
 	cli.Execute()
 
 	// Start the backend server
-	cli.StartBackendServer()
+	cli.Start()
 }

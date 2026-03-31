@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/openai/openai-go/v2"
-	"gopkg.in/yaml.v2"
 )
 
 // TODO: Convert all the UUID fields from strings into a custom UUID type
@@ -101,31 +100,18 @@ func NewConversation(topic string, seed int64, conversationID string) *Conversat
 }
 
 // StartNewSession creates a new session, initializes files, calls OpenAI, and returns display info.
-func StartNewConversation(client ChatClient, topic string) (*Conversation, error) {
+func StartNewConversation(client ChatClient, topic string, projectRoot string) (*Conversation, error) {
 	// Start prepping session data
 	var seed int64 = 1 // TODO: add random seed generator
 	conversationID, _ := CreateUUIDv4()
 
-	// TODO: Read in the config here and change path from hardcoded to config.conversationFileLocation
-
-	// File handling
-	configPath := "./.sidebar"
-	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		return nil, fmt.Errorf("config directory missing: %w", err)
+	convoDir := filepath.Join(projectRoot, ".arbor", "conversations")
+	if err := os.MkdirAll(convoDir, 0755); err != nil {
+		return nil, fmt.Errorf("cannot create conversations dir: %w", err)
 	}
 
-	convoPath := "./.sidebar/conversations"
 	fileName := fmt.Sprintf("convo_%s.json", conversationID)
-	sourceFilePath := "templates/convo.json"
-	if err := CopyFile(sourceFilePath, convoPath); err != nil {
-		return nil, fmt.Errorf("error copying template: %w", err)
-	}
-
-	oldPath := filepath.Join(convoPath, "convo.json")
-	newPath := filepath.Join(convoPath, fileName)
-	if err := os.Rename(oldPath, newPath); err != nil {
-		return nil, fmt.Errorf("error renaming convo file: %w", err)
-	}
+	convoPath := filepath.Join(convoDir, fileName)
 
 	// Prepare OpenAI request
 	param := openai.ChatCompletionNewParams{
@@ -138,7 +124,7 @@ func StartNewConversation(client ChatClient, topic string) (*Conversation, error
 
 	// Create new conversation and new message
 	convo := NewConversation(topic, seed, conversationID)
-	convo.Path = newPath // Set conversation path
+	convo.Path = convoPath
 	messageID, _ := CreateUUIDv4()
 	message := Message{
 		MessageID: messageID,
@@ -177,43 +163,12 @@ func StartNewConversation(client ChatClient, topic string) (*Conversation, error
 		return nil, fmt.Errorf("error committing conversation: %w", err)
 	}
 
-	// Update config
-	yamlFile := filepath.Join(configPath, "sidebar-config.yaml")
-	if err := UpdateConversationID(yamlFile, conversationID); err != nil {
-		return nil, fmt.Errorf("error updating conversationID: %w", err)
-	}
-
 	return convo, nil
 }
 
 // List all conversations you have with chatbot
-func ListConversations(folderPath string) ([]ConversationListItem, error) {
-	// Read in config file relative to where the binary runs
-	exePath, _ := os.Executable()
-	exeDir := filepath.Dir(exePath)
-	configPath := filepath.Join(exeDir, ".sidebar", "sidebar-config.yaml")
-	configFile, err := os.ReadFile(configPath)
-	if err != nil {
-		return nil, fmt.Errorf("error reading config: %w", err)
-	}
-
-	// Dump to struct
-	var config Config
-	if err := yaml.Unmarshal(configFile, &config); err != nil {
-		return nil, fmt.Errorf("error unmarshaling YAML: %w", err)
-	}
-
-	// Read in conversation files location
-	var convoFileLoc string
-	if folderPath != "" {
-		// If the frontend requested a specific folder, use it
-		convoFileLoc = folderPath
-	} else {
-		// Otherwise, use the default root folder
-		convoFileLoc = filepath.Join(exeDir, config.ConversationFileLocation)
-	}
-
-	entries, err := os.ReadDir(convoFileLoc)
+func ListConversations(convoDir string) ([]ConversationListItem, error) {
+	entries, err := os.ReadDir(convoDir)
 	if err != nil {
 		return nil, fmt.Errorf("error reading convo directory: %w", err)
 	}
@@ -224,13 +179,13 @@ func ListConversations(folderPath string) ([]ConversationListItem, error) {
 			results = append(results, ConversationListItem{
 				Name: entry.Name(),
 				Type: "folder",
-				Path: filepath.Join(convoFileLoc, entry.Name()),
+				Path: filepath.Join(convoDir, entry.Name()),
 			})
 			continue
 		}
 
 		// Read/parse convo file
-		newPath := filepath.Join(convoFileLoc, entry.Name())
+		newPath := filepath.Join(convoDir, entry.Name())
 		data, err := ReadJSON(newPath)
 		if err != nil {
 			fmt.Printf("errored on file %s", entry.Name())
@@ -253,34 +208,19 @@ func ListConversations(folderPath string) ([]ConversationListItem, error) {
 	return results, nil
 }
 
-func GetConversation(id string) (*Conversation, error) {
-	// Read in config file relative to where the binary runs
-	exePath, _ := os.Executable()
-	exeDir := filepath.Dir(exePath)
-	configPath := filepath.Join(exeDir, ".sidebar", "sidebar-config.yaml")
-	configFile, err := os.ReadFile(configPath)
-	if err != nil {
-		return nil, fmt.Errorf("error reading config: %w", err)
-	}
+func GetConversation(convoDir string, id string) (*Conversation, error) {
+	fileName := fmt.Sprintf("convo_%s.json", id)
+	convoFile := filepath.Join(convoDir, fileName)
 
-	// Dump to struct
-	var config Config
-	if err := yaml.Unmarshal(configFile, &config); err != nil {
-		return nil, fmt.Errorf("error unmarshaling YAML: %w", err)
-	}
-
-	// Read in conversation file
-	convoFileLoc := filepath.Join(exeDir, config.ConversationFileLocation)
-	fileName := fmt.Sprintf("%s.json", id)
-	convoFile := filepath.Join(convoFileLoc, fileName)
 	data, err := os.ReadFile(convoFile)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read conversation: %w", err)
+		return nil, fmt.Errorf("failed to read conversation %s: %w", id, err)
 	}
 
 	var convo Conversation
 	if err := json.Unmarshal(data, &convo); err != nil {
 		return nil, fmt.Errorf("failed to parse conversation JSON: %w", err)
 	}
+
 	return &convo, nil
 }

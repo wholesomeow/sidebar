@@ -11,14 +11,7 @@ import (
 )
 
 // SendMessage sends a message to the last active conversation and returns the assistant's response
-func SendMessage(client ChatClient, msg string) (string, error) {
-	// Load last conversation
-	configPath := "./.sidebar/sidebar-config.yaml"
-	convo, err := ConversationfromJSON(configPath)
-	if err != nil {
-		return "", fmt.Errorf("error creating conversation struct: %w", err)
-	}
-
+func SendMessage(client ChatClient, convo *Conversation, msg string) (string, error) {
 	// Prepare OpenAI request by appending the new user message
 	param := openai.ChatCompletionNewParams{
 		Messages: []openai.ChatCompletionMessageParamUnion{

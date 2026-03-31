@@ -1,0 +1,2322 @@
+========== cmd/api/conversations.go ==========
+package api
+
+import (
+	"fmt"
+	"net/http"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/wholesomeow/chatwrapper/cmd/app"
+)
+
+type FakeData struct {
+	Data string
+}
+
+func ListConversations(c *gin.Context) {
+	// Call the function and process any errors
+	// Frontend can send ?path=...
+	folderPath := c.Query("path")
+	conversations, err := app.ListConversations(folderPath)
+	if err != nil {
+		msg := fmt.Sprintf("Conversation collection failed: %s", err)
+		status, response := Response500(msg)
+		c.JSON(status, response)
+
+		return
+	}
+
+	// Populate the context
+	c.JSON(http.StatusOK, Response{
+		Status:    http.StatusText(http.StatusOK),
+		Message:   "Conversations listed successfully",
+		Data:      conversations,
+		Timestamp: time.Now(),
+	})
+}
+
+func CreateConversation(c *gin.Context) {
+	// Get content from "form"
+	topic := c.PostForm("topic")
+
+	// Create new conversation
+	client := app.NewOpenAIClient()
+	conversation, err := app.StartNewConversation(client, topic)
+	if err != nil {
+		msg := fmt.Sprintf("Failed to create new Conversation: %s", err)
+		status, response := Response500(msg)
+		c.JSON(status, response)
+
+		return
+	}
+
+	// Process data
+	data, err := app.StructToJSON(*conversation)
+	if err != nil {
+		msg := fmt.Sprintf("Failed to parse conversation to JSON: %s", err)
+		status, response := Response500(msg)
+		c.JSON(status, response)
+
+		return
+	}
+
+	// Populate the context
+	c.JSON(http.StatusOK, Response{
+		Status:    http.StatusText(http.StatusOK),
+		Message:   "Conversations listed successfully",
+		Data:      data,
+		Timestamp: time.Now(),
+	})
+}
+
+func GetConversation(c *gin.Context) {
+	// Call the function and process any errors
+	// Frontend can send ?path=...
+	folderPath := c.Query("path")
+	convo, err := app.GetConversation(folderPath)
+	if err != nil {
+		msg := fmt.Sprintf("Failed to get messages from conversation: %s", err)
+		status, response := Response500(msg)
+		c.JSON(status, response)
+
+		return
+	}
+
+	// Populate the context
+	c.JSON(http.StatusOK, Response{
+		Status:    http.StatusText(http.StatusOK),
+		Message:   "Conversations listed successfully",
+		Data:      convo,
+		Timestamp: time.Now(),
+	})
+}
+
+func DeleteConversation(c *gin.Context) {
+	// TODO: Implement conversation deletion
+	// if err != nil {
+	// 	msg := fmt.Sprintf("NPC name generation failed: %s", err)
+	// 	status, response := Response500(msg)
+	// 	c.JSON(status, response)
+	// }
+
+	// Populate the context
+	c.JSON(http.StatusOK, Response{
+		Status:  http.StatusText(http.StatusOK),
+		Message: "Conversations listed successfully",
+		Data: FakeData{
+			Data: "Wow, look at all this data",
+		},
+		Timestamp: time.Now(),
+	})
+}
+
+========== cmd/api/messages.go ==========
+package api
+
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/wholesomeow/chatwrapper/cmd/app"
+)
+
+type SingleMessage struct {
+	Message string
+}
+
+func SendMessage(c *gin.Context) {
+	// Get content from "form"
+	msg := c.PostForm("message")
+
+	// Create new conversation
+	client := app.NewOpenAIClient()
+	content, err := app.SendMessage(client, msg)
+	if err != nil {
+		msg := fmt.Sprintf("Failed to send message: %s", err)
+		status, response := Response500(msg)
+		c.JSON(status, response)
+
+		return
+	}
+
+	message := SingleMessage{
+		Message: content,
+	}
+
+	data, _ := json.MarshalIndent(message, "", "  ")
+
+	// Populate the context
+	c.JSON(http.StatusOK, Response{
+		Status:    http.StatusText(http.StatusOK),
+		Message:   "Conversations listed successfully",
+		Data:      data,
+		Timestamp: time.Now(),
+	})
+}
+
+func GetMessages(c *gin.Context) {
+	// Call the function and process any errors
+	// Frontend can send /:id/...
+	id := c.Param("id")
+	convo, err := app.GetConversation(id)
+	if err != nil {
+		msg := fmt.Sprintf("Failed to get messages from conversation: %s", err)
+		status, response := Response500(msg)
+		c.JSON(status, response)
+
+		return
+	}
+
+	// Populate the context
+	c.JSON(http.StatusOK, Response{
+		Status:    http.StatusText(http.StatusOK),
+		Message:   "Conversations listed successfully",
+		Data:      convo.Messages,
+		Timestamp: time.Now(),
+	})
+}
+
+func DeleteMessage(c *gin.Context) {
+	// TODO: Implement MessageID as passed param to then delete message from conversation
+	// if err != nil {
+	// 	msg := fmt.Sprintf("NPC name generation failed: %s", err)
+	// 	status, response := Response500(msg)
+	// 	c.JSON(status, response)
+	// }
+
+	// Populate the context
+	c.JSON(http.StatusOK, Response{
+		Status:  http.StatusText(http.StatusOK),
+		Message: "Conversations listed successfully",
+		Data: FakeData{
+			Data: "Wow, look at all this data",
+		},
+		Timestamp: time.Now(),
+	})
+}
+
+========== cmd/api/responseStruct.go ==========
+package api
+
+import (
+	"net/http"
+	"time"
+
+	"github.com/gin-gonic/gin"
+)
+
+type Response struct {
+	Status    string
+	Message   string
+	Data      interface{}
+	Error     interface{}
+	Timestamp time.Time
+}
+
+func Response404(context *gin.Context) {
+	status := http.StatusNotFound
+	response := Response{
+		Status:    http.StatusText(status),
+		Message:   "Page not found",
+		Timestamp: time.Now(),
+	}
+	context.JSON(status, response)
+}
+
+func Response500(msg string) (int, Response) {
+	// Return error message if querystring parameters don't pass
+	status := http.StatusInternalServerError
+	response := Response{
+		Status:    http.StatusText(status),
+		Message:   "Internal Server Error",
+		Error:     msg,
+		Timestamp: time.Now(),
+	}
+
+	return status, response
+}
+
+========== cmd/app/archive.go ==========
+package app
+
+// Set archive param
+func (c *Conversation) ArchiveConversation() {
+	if !c.Archive {
+		c.Archive = true
+	}
+}
+
+// Set archive param
+func (c *Conversation) UnarchiveConversation() {
+	if c.Archive {
+		c.Archive = false
+	}
+}
+
+========== cmd/app/archive_test.go ==========
+package app_test
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/require"
+	"github.com/wholesomeow/chatwrapper/cmd/app"
+)
+
+// Test archive.go ------------------------------------------------------------
+
+// Tests to write
+// 1. Archive conversation
+//     A. As Owner (success)
+//     B. As Non-Owner (failure)
+// 2. Attempt to write to conversation (should fail)
+// 3. Unarchive conversation
+//     A. As Owner (success)
+//     B. As Non-Owner (failure)
+
+func TestArchiveConversation_TestTable(t *testing.T) {
+	tests := []struct {
+		name          string
+		setup         func(t *testing.T, baseDir string)
+		mockClient    app.ChatClient
+		expectErr     bool
+		expectErrPart string
+		verify        func(t *testing.T, convo *app.Conversation)
+	}{
+		{
+			name: "Archive Conversation",
+			setup: func(t *testing.T, baseDir string) {
+				setupFakeSidebarEnv(t)
+			},
+			mockClient: &app.MockClient{
+				MockResponse: &app.MockCompletion,
+			},
+			expectErr: false,
+			verify: func(t *testing.T, convo *app.Conversation) {
+				convo.ArchiveConversation()
+				require.True(t, convo.Archive)
+			},
+		},
+		{
+			name: "Unarchive Conversation",
+			setup: func(t *testing.T, baseDir string) {
+				setupFakeSidebarEnv(t)
+			},
+			mockClient: &app.MockClient{
+				MockResponse: &app.MockCompletion,
+			},
+			expectErr: false,
+			verify: func(t *testing.T, convo *app.Conversation) {
+				convo.UnarchiveConversation()
+				require.False(t, convo.Archive)
+			},
+		},
+	}
+
+	// Test the test cases in the table
+	for _, testcase := range tests {
+		t.Run(testcase.name, func(t *testing.T) {
+			baseDir := t.TempDir()
+			testcase.setup(t, baseDir)
+
+			// Check the errors we are expecting
+			topic := "testing topic for chatbot wrapper application"
+			convo, err := app.StartNewConversation(testcase.mockClient, topic)
+			if testcase.expectErr {
+				require.Error(t, err)
+				if testcase.expectErrPart != "" {
+					require.Contains(t, err.Error(), testcase.expectErrPart)
+				}
+				return
+			}
+
+			// Make sure the test case is ready to be verified
+			// AKA the conversation built correctly
+			require.NoError(t, err)
+			require.NotNil(t, convo)
+			require.NotEmpty(t, convo.ConversationID)
+			require.NotEmpty(t, convo.LastMessageID)
+
+			// If there is a verification step, run it
+			if testcase.verify != nil {
+				testcase.verify(t, convo)
+			}
+		})
+	}
+}
+
+========== cmd/app/branch.go ==========
+package app
+
+import "fmt"
+
+// Create a new branch object
+func newBranch(name string, head string, id string, main bool) *Branch {
+	return &Branch{
+		Name:     name,
+		Main:     main,
+		BranchID: id,
+		HeadID:   head,
+		Context: BranchContext{
+			Threashold: 128000.00,
+			Count:      0,
+		},
+	}
+}
+
+// TODO: Make bool param optional
+// Create a new branch from a given commit
+func (c *Conversation) Branch(name string, head string, main bool) string {
+	// Don't do anything if conversation is Archived
+	if c.Archive {
+		return ""
+	}
+
+	// Double-check that maps exist
+	if c.Branches == nil {
+		return ""
+	}
+	if c.Messages == nil {
+		return ""
+	}
+
+	branchID, _ := CreateUUIDv4()
+
+	// Get rough token size from previous messages
+	// 1 token ~= 4 english characters
+	history := []string{}
+	var tokenCount float64
+	for _, message := range c.Messages {
+
+		// This cast might end up being really expensive
+		tokenCount += float64(len(message.Content)) / 4
+		history = append(history, message.Content)
+	}
+
+	// Populate branch
+	c.Branches[branchID] = newBranch(name, head, branchID, main)
+	c.Branches[branchID].Context.History = history
+
+	// If token amount is greater than context.threashold
+	// auto summarize context
+	currentBranch := c.Branches[branchID]
+	if currentBranch.Context.Count > currentBranch.Context.Threashold {
+		fmt.Printf("Branch context threashold exceeded - Current tokens in context window: %f", currentBranch.Context.Count)
+
+		// Populate branch context.summary (if applicable)
+	}
+
+	// Set HEAD
+	c.Head = currentBranch.BranchID
+	if main {
+		c.MainBranchID = branchID
+	}
+
+	return branchID
+}
+
+// Return a list of all branches in a coversation
+func (c *Conversation) ListBranches() []string {
+	branchList := []string{}
+	for key := range c.Branches {
+		branchList = append(branchList, key)
+	}
+
+	return branchList
+}
+
+// Delete a branch
+func (c *Conversation) DeleteBranch(branchID string) bool {
+	// Don't do anything if conversation is Archived
+	if c.Archive {
+		return false
+	}
+
+	// Check if branch exists
+	if _, exists := c.Branches[branchID]; exists {
+		delete(c.Branches, branchID)
+		return true
+	}
+
+	return false
+}
+
+========== cmd/app/branch_test.go ==========
+package app_test
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/require"
+	"github.com/wholesomeow/chatwrapper/cmd/app"
+)
+
+// Test Helpers ---------------------------------------------------------------
+
+// Test branch.go -------------------------------------------------------------
+
+// Tests to write
+// 3. Message in branch
+// 4. Change branch and message to that branch (Should fail)
+// 5. Archive conversation and create branch (Should fail)
+
+func TestBranchConversation_TestTable(t *testing.T) {
+	tests := []struct {
+		name          string
+		setup         func(t *testing.T, baseDir string)
+		mockClient    app.ChatClient
+		expectErr     bool
+		expectErrPart string
+		verify        func(t *testing.T, convo *app.Conversation)
+	}{
+		{
+			name: "Branch Created",
+			setup: func(t *testing.T, baseDir string) {
+				setupFakeSidebarEnv(t)
+			},
+			mockClient: &app.MockClient{
+				MockResponse: &app.MockCompletion,
+			},
+			expectErr: false,
+			verify: func(t *testing.T, convo *app.Conversation) {
+				branchID := convo.Branch("test", convo.LastMessageID, false)
+				require.Len(t, convo.Branches, 2)
+
+				branch := convo.Branches[branchID]
+				require.Contains(t, branch.Name, "test")
+				require.False(t, branch.Main)
+			},
+		},
+		{
+			name: "Archive Branch Created",
+			setup: func(t *testing.T, baseDir string) {
+				setupFakeSidebarEnv(t)
+			},
+			mockClient: &app.MockClient{
+				MockResponse: &app.MockCompletion,
+			},
+			expectErr: false,
+			verify: func(t *testing.T, convo *app.Conversation) {
+				convo.ArchiveConversation()
+				convo.Branch("test", convo.LastMessageID, false)
+				require.Len(t, convo.Branches, 1)
+			},
+		},
+		{
+			name: "Delete Branch",
+			setup: func(t *testing.T, baseDir string) {
+				setupFakeSidebarEnv(t)
+			},
+			mockClient: &app.MockClient{
+				MockResponse: &app.MockCompletion,
+			},
+			expectErr: false,
+			verify: func(t *testing.T, convo *app.Conversation) {
+				branchID := convo.Branch("test", convo.LastMessageID, false)
+				require.Len(t, convo.Branches, 2)
+
+				branch := convo.Branches[branchID]
+				require.Contains(t, branch.Name, "test")
+				require.False(t, branch.Main)
+
+				res := convo.DeleteBranch(branchID)
+				require.True(t, res)
+				require.Len(t, convo.Branches, 1)
+			},
+		},
+	}
+
+	// Test the test cases in the table
+	for _, testcase := range tests {
+		t.Run(testcase.name, func(t *testing.T) {
+			baseDir := t.TempDir()
+			testcase.setup(t, baseDir)
+
+			// Check the errors we are expecting
+			topic := "testing topic for chatbot wrapper application"
+			convo, err := app.StartNewConversation(testcase.mockClient, topic)
+			if testcase.expectErr {
+				require.Error(t, err)
+				if testcase.expectErrPart != "" {
+					require.Contains(t, err.Error(), testcase.expectErrPart)
+				}
+				return
+			}
+
+			// Make sure the test case is ready to be verified
+			// AKA the conversation built correctly
+			require.NoError(t, err)
+			require.NotNil(t, convo)
+			require.NotEmpty(t, convo.ConversationID)
+			require.NotEmpty(t, convo.LastMessageID)
+
+			// If there is a verification step, run it
+			if testcase.verify != nil {
+				testcase.verify(t, convo)
+			}
+		})
+	}
+}
+
+========== cmd/app/checkout.go ==========
+package app
+
+import "fmt"
+
+// Switch HEAD pointer to another branch
+func (c *Conversation) Checkout(branchName string) error {
+	if c.Head == branchName {
+		return nil
+	}
+
+	for key, value := range c.Branches {
+		if value.Name == branchName {
+			c.Head = key
+			return nil
+		}
+	}
+
+	return fmt.Errorf("branch %s not found", branchName)
+}
+
+// TODO: Conversation Checkout function here
+
+========== cmd/app/client.go ==========
+package app
+
+import (
+	"context"
+	"os"
+	"time"
+
+	"github.com/openai/openai-go/v2"
+	"github.com/openai/openai-go/v2/option"
+)
+
+type ChatClient interface {
+	ChatCompletion(ctx context.Context, params openai.ChatCompletionNewParams) (*openai.ChatCompletion, error)
+}
+
+// Functions for Real OpenAI API Client
+type OpenAIClient struct {
+	client *openai.Client
+}
+
+func NewOpenAIClient() *OpenAIClient {
+	// Prep the API Key, one way or another
+	apiKey := os.Getenv("OPENAI_API_KEY")
+	if len(apiKey) == 0 {
+		apiKey = GetAPIKey()
+	}
+
+	// TODO: Figure out why this works but
+	// client.client = &openai.NewClient(option.WithAPIKey(apiKey)) does not
+	var client OpenAIClient
+	newclient := openai.NewClient(option.WithAPIKey(apiKey))
+	client.client = &newclient
+
+	return &client
+}
+
+func (c *OpenAIClient) ChatCompletion(ctx context.Context, params openai.ChatCompletionNewParams) (*openai.ChatCompletion, error) {
+	return c.client.Chat.Completions.New(ctx, params)
+}
+
+// Functions for Mock Client --------------------------------------------------
+// THESE ARE FOR TESTING ONLY
+
+var goodConvo = []byte(`{
+	"conversationID": "c2edd7c3-25ff-4111-3fd7-a9b8689b30e2",
+	"seed": 0,
+	"name": "",
+	"path": ".sidebar/convo_c2edd7c3-25ff-4111-3fd7-a9b8689b30e2.json",
+	"topic": "testing topic for chatbot wrapper application",
+	"timestamp": "2025-10-18T09:37:09.613341168-06:00",
+	"lastMessageID": "ee15d0a7-f9ed-4221-3f79-da427aebaad1",
+	"messages": {
+		"637c96f9-6446-4aa5-3f66-ee94f039c7db": {
+			"messageID": "637c96f9-6446-4aa5-3f66-ee94f039c7db",
+			"parentID": ["c2edd7c3-25ff-4111-3fd7-a9b8689b30e2"],
+			"timestamp": "2025-10-18T09:37:09.613347473-06:00",
+			"role": "assistant",
+			"content": "Creating a chatbot wrapper application is an excellent way to enhance the functionality and user experience of a chatbot..."
+		},
+		"ce41884d-69c9-4817-3f3f-0b70b404bf34": {
+			"messageID": "ce41884d-69c9-4817-3f3f-0b70b404bf34",
+			"parentID": ["637c96f9-6446-4aa5-3f66-ee94f039c7db"],
+			"timestamp": "2025-10-18T09:37:26.627599898-06:00",
+			"role": "user",
+			"content": "Can you give your response in it's raw json format?"
+		},
+		"ee15d0a7-f9ed-4221-3f79-da427aebaad1": {
+			"messageID": "ee15d0a7-f9ed-4221-3f79-da427aebaad1",
+			"parentID": ["ce41884d-69c9-4817-3f3f-0b70b404bf34"],
+			"timestamp": "2025-10-18T09:37:26.627778684-06:00",
+			"role": "assistant",
+			"content": "Certainly! Here's the information structured in a raw JSON format..."
+		}
+	},
+	"pinned": null,
+	"branches": {
+		"c2edd7c3-25ff-4111-3fd7-a9b8689b30e2": {
+			"name": "c2edd7c3-25ff-4111-3fd7-a9b8689b30e2",
+			"branchID": "",
+			"headID": "ee15d0a7-f9ed-4221-3f79-da427aebaad1"
+		}
+	},
+	"head": "c2edd7c3-25ff-4111-3fd7-a9b8689b30e2",
+	"archive": false
+}`)
+
+var badConvo = []byte(`{
+	"conversationID": "240e07e1-a430-4f77-3fe2-59dc5d7ded98",
+	"seed": 0,
+	"name": "",
+	"path": ".sidebar/convo_c2edd7c3-25ff-4111-3fd7-a9b8689b30e2.json",
+	"topic": "testing topic for chatbot wrapper application",
+	"timestamp": "2025-10-18T09:37:09.613341168-06:00",
+	"messages": {
+		"7f2063cb-be02-49c9-3f7a-45d8199783c7": {
+			"messageID": "7f2063cb-be02-49c9-3f7a-45d8199783c7",
+			"parentID": ["c2edd7c3-25ff-4111-3fd7-a9b8689b30e2"],
+			"timestamp": "2025-10-18T09:37:09.613347473-06:00",
+			"role": "assistant",
+			"content": "You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors."
+		}
+	},
+	"pinned": null,
+	"branches": {
+		"240e07e1-a430-4f77-3fe2-59dc5d7ded98": {
+			"name": "240e07e1-a430-4f77-3fe2-59dc5d7ded98",
+			"branchID": "",
+			"headID": "7f2063cb-be02-49c9-3f7a-45d8199783c7"
+		}
+	},
+	"head": "240e07e1-a430-4f77-3fe2-59dc5d7ded98",
+	"archive": false
+}`)
+
+type MockClient struct {
+	// Optional: allow overriding default mock completion for more flexible tests
+	MockResponse *openai.ChatCompletion
+
+	// Optional explicit error to return
+	Err error
+
+	// Optional handler to run custom logic per-call (takes precedence over Err/MockResponse)
+	Handler func(ctx context.Context, params openai.ChatCompletionNewParams) (*openai.ChatCompletion, error)
+}
+
+var MockCompletion = openai.ChatCompletion{
+	ID:      "chatcmpl-1234567890abcdef",
+	Object:  "chat.completion",
+	Created: time.Now().Unix(), // or fixed for determinism
+	Model:   string(openai.ChatModelGPT4o),
+	Choices: []openai.ChatCompletionChoice{
+		{
+			Index: 0,
+			Message: openai.ChatCompletionMessage{
+				Role:    "assistant",
+				Content: "Creating a chatbot wrapper application is an excellent way to enhance the functionality and user experience of a chatbot...",
+			},
+			FinishReason: "stop",
+		},
+	},
+	Usage: openai.CompletionUsage{
+		PromptTokens:     9,
+		CompletionTokens: 12,
+		TotalTokens:      21,
+	},
+}
+
+func (m *MockClient) ChatCompletion(ctx context.Context, params openai.ChatCompletionNewParams) (*openai.ChatCompletion, error) {
+	// If custom logic is set, use that
+	if m.Handler != nil {
+		return m.Handler(ctx, params)
+	}
+
+	// If error is set, then use that
+	if m.Err != nil {
+		return nil, m.Err
+	}
+
+	// If no custom mock was set, fall back to the canned response
+	if m.MockResponse == nil {
+		return &MockCompletion, nil
+	}
+	return m.MockResponse, nil
+}
+
+// Example Handler use
+// mock := &app.MockClient{
+//     Handler: func(ctx context.Context, params openai.ChatCompletionNewParams) (*openai.ChatCompletion, error) {
+//         return nil, fmt.Errorf("OpenAI error: %s", string(errJSON))
+//     },
+// }
+
+========== cmd/app/commit.go ==========
+package app
+
+import "fmt"
+
+func (c *Conversation) CommitCoversation(path string) error {
+	writeData, err := StructToJSON(*c)
+	if err != nil {
+		return err
+	}
+	err = WriteJSON(path, writeData)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Appends a message to the Messages field within a Conversation
+func (c *Conversation) CommitHead(message *Message) error {
+	// Append the message to Messages
+	c.Messages[message.MessageID] = message
+
+	// Move the HEAD branch pointer forward
+	if branch, ok := c.Branches[c.Head]; ok {
+		branch.HeadID = message.MessageID
+	} else {
+		id, _ := CreateUUIDv4()
+		branchName := fmt.Sprintf("auto-generated-branch-%s", id)
+		c.Branches[c.Head] = &Branch{
+			Name:     branchName,
+			Main:     false,
+			BranchID: id,
+			HeadID:   message.MessageID,
+		}
+	}
+
+	// Set last messageID
+	c.LastMessageID = message.MessageID
+
+	return nil
+}
+
+========== cmd/app/config.go ==========
+package app
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+
+	"gopkg.in/yaml.v2"
+)
+
+type Config struct {
+	APIKEY                   string `yaml:"API_KEY"`
+	LastConversationID       string `yaml:"lastConversationID"`
+	ConversationFileLocation string `yaml:"conversationFileLocation"`
+}
+
+// SetupConfig ensures that the local `.sidebar` directory exists
+// and initializes it with a default `sidebar-config.yaml` if missing.
+//
+// Side effects:
+//   - Creates `.sidebar` directory with 0755 permissions if absent.
+//   - Copies the `templates/sidebar-config.yaml` into `.sidebar` on first run.
+//
+// Returns:
+//   - nil on success.
+//   - error if the directory cannot be created or the template cannot be copied.
+func SetupConfig() error {
+	// Get the directory where the binary is running
+	exePath, err := os.Executable()
+	if err != nil {
+		return fmt.Errorf("cannot get executable path: %w", err)
+	}
+	exeDir := filepath.Dir(exePath)
+
+	// Config directory relative to binary
+	configDir := filepath.Join(exeDir, ".sidebar")
+	sourceFilePath := filepath.Join(exeDir, "templates", "sidebar-config.yaml")
+
+	cwd, _ := os.Getwd()
+	fmt.Println("Current working directory:", cwd)
+	fmt.Println("Config directory:", configDir)
+	fmt.Println("Looking for:", sourceFilePath)
+
+	_, err = os.Stat(configDir)
+	if os.IsNotExist(err) {
+		// Directory doesn't exist, create it
+		if err := os.MkdirAll(configDir, 0755); err != nil {
+			return fmt.Errorf("error creating directory: %w", err)
+		}
+		if err := CopyFile(sourceFilePath, configDir); err != nil {
+			return fmt.Errorf("error copying file: %w", err)
+		}
+	}
+	return nil
+}
+
+// InitAPIKey ensures that an OpenAI API key is available for the application.
+// It attempts to read the API key from `.sidebar/sidebar-config.yaml` or the
+// `OPENAI_API_KEY` environment variable. If no environment variable is set,
+// it sets `OPENAI_API_KEY` using the config file value.
+//
+// Side effects:
+//   - May set the `OPENAI_API_KEY` environment variable at runtime.
+//
+// Returns:
+//   - A masked string version of the API key (e.g., `abc...xyz`) on success.
+//   - An error if the config file cannot be read, parsed, or contains no key.
+func InitAPIKey() (string, error) {
+	// Get the directory where the binary is running
+	exePath, err := os.Executable()
+	if err != nil {
+		return "", fmt.Errorf("cannot get executable path: %w", err)
+	}
+	exeDir := filepath.Dir(exePath)
+
+	// Config directory relative to binary
+	yamlFile := filepath.Join(exeDir, ".sidebar", "sidebar-config.yaml")
+	f, err := os.ReadFile(yamlFile)
+	if err != nil {
+		return "", fmt.Errorf("error reading file %s: %w", yamlFile, err)
+	}
+
+	var data map[string]interface{}
+	if err := yaml.Unmarshal(f, &data); err != nil {
+		return "", fmt.Errorf("error unmarshaling YAML: %w", err)
+	}
+
+	keyValue, ok := data["API_KEY"]
+	if !ok || keyValue == "nil" {
+		return "", fmt.Errorf("API key missing in sidebar-config.yaml")
+	}
+
+	apiKey := os.Getenv("OPENAI_API_KEY")
+	if len(apiKey) == 0 {
+		apiKey = keyValue.(string)
+		if err := os.Setenv("OPENAI_API_KEY", apiKey); err != nil {
+			return "", fmt.Errorf("error setting API_KEY env var: %w", err)
+		}
+	}
+
+	// Mask API key before returning
+	prefix := apiKey[:3]
+	suffix := apiKey[len(apiKey)-4 : len(apiKey)-1]
+	displayKey := fmt.Sprintf("%s...%s", prefix, suffix)
+
+	return displayKey, nil
+}
+
+// GetAPIKey retrieves the raw API key directly from `.sidebar/sidebar-config.yaml`.
+// Unlike InitAPIKey, it does not set environment variables or mask the result.
+//
+// Returns:
+//   - The API key string if present.
+//   - An empty string if the config file cannot be read, parsed, or contains no key.
+func GetAPIKey() string {
+	yamlFile := filepath.Join("./.sidebar", "sidebar-config.yaml")
+	f, err := os.ReadFile(yamlFile)
+	if err != nil {
+		fmt.Printf("Error reading file %s: %v\n", yamlFile, err)
+		return ""
+	}
+
+	var data map[string]interface{}
+	if err := yaml.Unmarshal(f, &data); err != nil {
+		fmt.Printf("Error unmarshaling YAML: %v\n", err)
+		return ""
+	}
+
+	if keyValue, ok := data["API_KEY"]; ok {
+		return keyValue.(string)
+	}
+	return ""
+}
+
+========== cmd/app/conversation.go ==========
+package app
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
+
+	"github.com/openai/openai-go/v2"
+	"gopkg.in/yaml.v2"
+)
+
+// TODO: Convert all the UUID fields from strings into a custom UUID type
+
+// Message represents a single entry in a conversation graph.
+// Each message can have one or more parents, allowing for branching
+// (similar to commits in Git). Messages hold both the raw user/assistant
+// content and the OpenAI ChatCompletion parameters needed to reproduce
+// the state of the conversation.
+type Message struct {
+	MessageID     string    `json:"messageID,omitempty"`     // Unique identifier for this message (like a commit hash).
+	ParentIDs     []string  `json:"parentID,omitempty"`      // IDs of parent messages; usually one, but may be multiple if merged.
+	Timestamp     time.Time `json:"timestamp,omitempty"`     // Time the message was created.
+	Role          string    `json:"role,omitempty"`          // Role of user that created message
+	Content       string    `json:"content,omitempty"`       // Message content.
+	ErrorResponse string    `json:"errorResponse,omitempty"` // Error response from OpenAI API
+}
+
+type BranchContext struct {
+	Summary    string   `json:"summary"`    // Summary of current context window if/when it exceeds token threashold
+	History    []string `json:"history"`    // All of the messages in the branch history
+	Threashold float64  `json:"threashold"` // Token threashold (currently hardcoded, but eventually will populate based on model selected)
+	Count      float64  `json:"count"`      // Current context token count
+}
+
+// Branch tracks a logical line of conversation development.
+// It is analogous to a Git branch: a human-readable name, an ID, and
+// a reference to the latest message (head). Branches allow parallel
+// exploration of different conversation directions.
+type Branch struct {
+	Name     string        `json:"name"`     // Display name of the branch (e.g., "experiment-1").
+	Main     bool          `json:"main"`     // Denotes if branch is "main" or not.
+	BranchID string        `json:"branchID"` // Unique identifier for the branch.
+	HeadID   string        `json:"headID"`   // ID of the latest message in this branch.
+	Context  BranchContext `json:"context"`  // Branch context, see above.
+}
+
+// Conversation represents the full graph of a chat session.
+// It behaves like a Git repository: storing all messages (nodes),
+// tracking branches, and maintaining references to the current head.
+// Conversations may be archived, pinned for reference, or replayed
+// deterministically using the stored seed and parameters.
+type Conversation struct {
+	ConversationID string              `json:"conversationID"` // Unique ID for the entire conversation (like a repo UUID).
+	Seed           int64               `json:"seed"`           // RNG seed to reproduce generation deterministically.
+	Name           string              `json:"name"`           // Summarized name of this conversation.
+	Path           string              `json:"path"`           // Path to where this conversation is stored on system
+	Topic          string              `json:"topic"`          // High-level topic or label for this conversation.
+	Timestamp      time.Time           `json:"timestamp"`      // Time the conversation was created.
+	LastMessageID  string              `json:"lastMessageID"`  // ID of the most recent message added (usually same as Head).
+	Messages       map[string]*Message `json:"messages"`       // All messages keyed by their IDs (conversation graph).
+	Pinned         map[string]*Message `json:"pinned"`         // Subset of messages marked as important/bookmarked, keyed by Message ID.
+	MainBranchID   string              `json:"mainBranchID"`   // ID of the "main" branch
+	Branches       map[string]*Branch  `json:"branches"`       // All branches, keyed by branch IDs.
+	Head           string              `json:"head"`           // ID of the current branch head (active pointer).
+	Archive        bool                `json:"archive"`        // Marks conversation as archived (read-only).
+}
+
+type OpenAIError struct {
+	Message string `json:"message"`
+	Type    string `json:"type"`
+	Param   string `json:"param,omitempty"`
+	Code    string `json:"code"`
+}
+
+// Struct that holds the data requested by the frontend
+// for listing all conversations
+type ConversationListItem struct {
+	Name string `json:"name"`
+	ID   string `json:"id"`
+	Type string `json:"type"`
+	Path string `json:"path"`
+}
+
+// Creates a new conversation
+func NewConversation(topic string, seed int64, conversationID string) *Conversation {
+	return &Conversation{
+		ConversationID: conversationID,
+		Seed:           0,
+		Topic:          topic,
+		Timestamp:      time.Now(),
+		Messages:       make(map[string]*Message),
+		Pinned:         make(map[string]*Message),
+		Branches:       make(map[string]*Branch),
+		Head:           conversationID,
+		Archive:        false,
+	}
+}
+
+// StartNewSession creates a new session, initializes files, calls OpenAI, and returns display info.
+func StartNewConversation(client ChatClient, topic string) (*Conversation, error) {
+	// Start prepping session data
+	var seed int64 = 1 // TODO: add random seed generator
+	conversationID, _ := CreateUUIDv4()
+
+	// TODO: Read in the config here and change path from hardcoded to config.conversationFileLocation
+
+	// File handling
+	configPath := "./.sidebar"
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		return nil, fmt.Errorf("config directory missing: %w", err)
+	}
+
+	convoPath := "./.sidebar/conversations"
+	fileName := fmt.Sprintf("convo_%s.json", conversationID)
+	sourceFilePath := "templates/convo.json"
+	if err := CopyFile(sourceFilePath, convoPath); err != nil {
+		return nil, fmt.Errorf("error copying template: %w", err)
+	}
+
+	oldPath := filepath.Join(convoPath, "convo.json")
+	newPath := filepath.Join(convoPath, fileName)
+	if err := os.Rename(oldPath, newPath); err != nil {
+		return nil, fmt.Errorf("error renaming convo file: %w", err)
+	}
+
+	// Prepare OpenAI request
+	param := openai.ChatCompletionNewParams{
+		Messages: []openai.ChatCompletionMessageParamUnion{
+			openai.UserMessage(topic),
+		},
+		Seed:  openai.Int(seed),
+		Model: openai.ChatModelGPT4o,
+	}
+
+	// Create new conversation and new message
+	convo := NewConversation(topic, seed, conversationID)
+	convo.Path = newPath // Set conversation path
+	messageID, _ := CreateUUIDv4()
+	message := Message{
+		MessageID: messageID,
+		ParentIDs: []string{conversationID},
+		Timestamp: time.Now(),
+	}
+
+	// Call OpenAI with custom wrapped ChatCompletion
+	completion, err := client.ChatCompletion(context.Background(), param)
+	if err != nil {
+		// Parse error JSON if present
+		errString := err.Error()
+		idx := strings.Index(errString, "{")
+		if idx != -1 {
+			jsonPart := errString[idx:]
+			var errResp OpenAIError
+			if e := json.Unmarshal([]byte(jsonPart), &errResp); e == nil {
+				message.ErrorResponse = errResp.Message
+			}
+		}
+	} else {
+		message.Role = string(completion.Choices[0].Message.Role)
+		message.Content = completion.Choices[0].Message.Content
+	}
+
+	// Create "main" branch for conversation
+	convo.Branch("main", message.MessageID, true)
+
+	// Commit to move Head
+	if err := convo.CommitHead(&message); err != nil {
+		return convo, fmt.Errorf("commit failed: %v", err)
+	}
+
+	// Commit to file
+	if err := convo.CommitCoversation(convo.Path); err != nil {
+		return nil, fmt.Errorf("error committing conversation: %w", err)
+	}
+
+	// Update config
+	yamlFile := filepath.Join(configPath, "sidebar-config.yaml")
+	if err := UpdateConversationID(yamlFile, conversationID); err != nil {
+		return nil, fmt.Errorf("error updating conversationID: %w", err)
+	}
+
+	return convo, nil
+}
+
+// List all conversations you have with chatbot
+func ListConversations(folderPath string) ([]ConversationListItem, error) {
+	// Read in config file relative to where the binary runs
+	exePath, _ := os.Executable()
+	exeDir := filepath.Dir(exePath)
+	configPath := filepath.Join(exeDir, ".sidebar", "sidebar-config.yaml")
+	configFile, err := os.ReadFile(configPath)
+	if err != nil {
+		return nil, fmt.Errorf("error reading config: %w", err)
+	}
+
+	// Dump to struct
+	var config Config
+	if err := yaml.Unmarshal(configFile, &config); err != nil {
+		return nil, fmt.Errorf("error unmarshaling YAML: %w", err)
+	}
+
+	// Read in conversation files location
+	var convoFileLoc string
+	if folderPath != "" {
+		// If the frontend requested a specific folder, use it
+		convoFileLoc = folderPath
+	} else {
+		// Otherwise, use the default root folder
+		convoFileLoc = filepath.Join(exeDir, config.ConversationFileLocation)
+	}
+
+	entries, err := os.ReadDir(convoFileLoc)
+	if err != nil {
+		return nil, fmt.Errorf("error reading convo directory: %w", err)
+	}
+
+	var results []ConversationListItem
+	for _, entry := range entries {
+		if entry.IsDir() {
+			results = append(results, ConversationListItem{
+				Name: entry.Name(),
+				Type: "folder",
+				Path: filepath.Join(convoFileLoc, entry.Name()),
+			})
+			continue
+		}
+
+		// Read/parse convo file
+		newPath := filepath.Join(convoFileLoc, entry.Name())
+		data, err := ReadJSON(newPath)
+		if err != nil {
+			fmt.Printf("errored on file %s", entry.Name())
+			return nil, fmt.Errorf("error reading convo file: %w", err)
+		}
+		convo, err := JSONToStruct(data)
+		if err != nil {
+			fmt.Printf("errored on file %s", entry.Name())
+			return nil, fmt.Errorf("error parsing convo JSON: %w", err)
+		}
+
+		results = append(results, ConversationListItem{
+			Name: convo.Name,
+			ID:   convo.ConversationID,
+			Type: "file",
+			Path: convo.Path,
+		})
+	}
+
+	return results, nil
+}
+
+func GetConversation(id string) (*Conversation, error) {
+	// Read in config file relative to where the binary runs
+	exePath, _ := os.Executable()
+	exeDir := filepath.Dir(exePath)
+	configPath := filepath.Join(exeDir, ".sidebar", "sidebar-config.yaml")
+	configFile, err := os.ReadFile(configPath)
+	if err != nil {
+		return nil, fmt.Errorf("error reading config: %w", err)
+	}
+
+	// Dump to struct
+	var config Config
+	if err := yaml.Unmarshal(configFile, &config); err != nil {
+		return nil, fmt.Errorf("error unmarshaling YAML: %w", err)
+	}
+
+	// Read in conversation file
+	convoFileLoc := filepath.Join(exeDir, config.ConversationFileLocation)
+	fileName := fmt.Sprintf("%s.json", id)
+	convoFile := filepath.Join(convoFileLoc, fileName)
+	data, err := os.ReadFile(convoFile)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read conversation: %w", err)
+	}
+
+	var convo Conversation
+	if err := json.Unmarshal(data, &convo); err != nil {
+		return nil, fmt.Errorf("failed to parse conversation JSON: %w", err)
+	}
+	return &convo, nil
+}
+
+========== cmd/app/conversation_test.go ==========
+package app_test
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"testing"
+
+	"github.com/stretchr/testify/require"
+	"github.com/wholesomeow/chatwrapper/cmd/app"
+)
+
+// Test Helpers ---------------------------------------------------------------
+
+func setupFakeSidebarEnv(t *testing.T) string {
+	t.Helper()
+
+	// Create temp directories for testing
+	tmp := t.TempDir()
+	sidebarDir := filepath.Join(tmp, ".sidebar")
+	conversationsDir := filepath.Join(sidebarDir, "conversations")
+	templateDir := filepath.Join(tmp, "templates")
+
+	require.NoError(t, os.MkdirAll(sidebarDir, 0755))
+	require.NoError(t, os.MkdirAll(conversationsDir, 0755))
+	require.NoError(t, os.MkdirAll(templateDir, 0755))
+
+	// Fake template file
+	templateFile := filepath.Join(templateDir, "convo.json")
+	require.NoError(t, os.WriteFile(templateFile, []byte(`{"conversationID":"template"}`), 0644))
+
+	// Fake config file
+	configFile := filepath.Join(sidebarDir, "sidebar-config.yaml")
+	require.NoError(t, os.WriteFile(configFile, []byte("API_KEY: fake-key\nlastConversationID: template\n"), 0644))
+
+	// Change current working dir so relative paths work
+	orignWD, _ := os.Getwd()
+	t.Cleanup(func() { os.Chdir(orignWD) })
+	require.NoError(t, os.Chdir(tmp))
+
+	return tmp
+}
+
+// Test conversation.go -------------------------------------------------------
+
+// Pre-Test Steps
+// Create Fake Config Struct and File
+// Create Fake Conversation Struct and File
+
+// Tests to write
+// 5. Commit applied
+//     A. File saved
+//     B. Config updated
+//     C. Head updated
+// 6. Client returns error (403 - insufficient_quota)
+//     A. Compile the internet error codes that OpenAI returns
+
+func TestStartNewConversation_TestTable(t *testing.T) {
+	tests := []struct {
+		name          string
+		setup         func(t *testing.T, baseDir string)
+		mockClient    app.ChatClient
+		expectErr     bool
+		expectErrPart string
+		verify        func(t *testing.T, convo *app.Conversation)
+	}{
+		{
+			name: "Happy Path",
+			setup: func(t *testing.T, baseDir string) {
+				setupFakeSidebarEnv(t)
+			},
+			mockClient: &app.MockClient{
+				MockResponse: &app.MockCompletion,
+			},
+			expectErr: false,
+			verify: func(t *testing.T, convo *app.Conversation) {
+				msg := convo.Messages[convo.LastMessageID]
+				require.NotNil(t, msg)
+				require.Contains(t, msg.Content, "Creating a chatbot wrapper application is an excellent way to enhance the functionality and user experience of a chatbot...")
+				require.Equal(t, "assistant", msg.Role)
+			},
+		},
+		{
+			name: "Missing Template File",
+			setup: func(t *testing.T, baseDir string) {
+				sidebar := filepath.Join(baseDir, ".sidebar")
+				require.NoError(t, os.MkdirAll(sidebar, 0755))
+				// Note: we do *not* create templates dir, so this should fail
+				configFile := filepath.Join(sidebar, "sidebar-config.yaml")
+				require.NoError(t, os.WriteFile(configFile, []byte("API_KEY: fake\n"), 0644))
+			},
+			mockClient:    &app.MockClient{},
+			expectErr:     true,
+			expectErrPart: "no such file or directory",
+		},
+		{
+			name: "Missing .sidebar Dir",
+			setup: func(t *testing.T, baseDir string) {
+				// Create only templates
+				require.NoError(t, os.MkdirAll(filepath.Join(baseDir, "templates"), 0755))
+				os.WriteFile(filepath.Join(baseDir, "templates/convo.json"), []byte("{}"), 0644)
+			},
+			mockClient:    &app.MockClient{},
+			expectErr:     true,
+			expectErrPart: "config directory missing",
+		},
+		{
+			name: "OpenAI JSON Rrror",
+			setup: func(t *testing.T, baseDir string) {
+				setupFakeSidebarEnv(t)
+			},
+			mockClient: &app.MockClient{
+				Err: fmt.Errorf("OpenAI error: {\"message\":\"invalid model\",\"type\":\"invalid_request_error\"}"),
+			},
+			expectErr: false, // still returns convo
+			verify: func(t *testing.T, convo *app.Conversation) {
+				msg := convo.Messages[convo.LastMessageID]
+				require.NotNil(t, msg)
+				require.Contains(t, msg.ErrorResponse, "invalid model")
+			},
+		},
+		{
+			name: "OpenAI Plain Error",
+			setup: func(t *testing.T, baseDir string) {
+				setupFakeSidebarEnv(t)
+			},
+			mockClient: &app.MockClient{
+				Err: fmt.Errorf("network timeout"),
+			},
+			expectErr: false,
+			verify: func(t *testing.T, convo *app.Conversation) {
+				msg := convo.Messages[convo.LastMessageID]
+				require.Empty(t, msg.ErrorResponse)
+			},
+		},
+		{
+			name: "Validate Main Branch",
+			setup: func(t *testing.T, baseDir string) {
+				setupFakeSidebarEnv(t)
+			},
+			mockClient: &app.MockClient{
+				MockResponse: &app.MockCompletion,
+			},
+			expectErr: false,
+			verify: func(t *testing.T, convo *app.Conversation) {
+				require.Contains(t, convo.Branches[convo.MainBranchID].Name, "main")
+			},
+		},
+	}
+
+	// Test the test cases in the table
+	for _, testcase := range tests {
+		t.Run(testcase.name, func(t *testing.T) {
+			baseDir := t.TempDir()
+			testcase.setup(t, baseDir)
+
+			// Check the errors we are expecting
+			topic := "testing topic for chatbot wrapper application"
+			convo, err := app.StartNewConversation(testcase.mockClient, topic)
+			if testcase.expectErr {
+				require.Error(t, err)
+				if testcase.expectErrPart != "" {
+					require.Contains(t, err.Error(), testcase.expectErrPart)
+				}
+				return
+			}
+
+			// Make sure the test case is ready to be verified
+			// AKA the conversation built correctly
+			require.NoError(t, err)
+			require.NotNil(t, convo)
+			require.NotEmpty(t, convo.ConversationID)
+			require.NotEmpty(t, convo.LastMessageID)
+
+			// If there is a verification step, run it
+			if testcase.verify != nil {
+				testcase.verify(t, convo)
+			}
+		})
+	}
+}
+
+========== cmd/app/merge.go ==========
+package app
+
+// TODO(wholesomeow): Make this function and then adapt it out
+// func (c *Conversation) Merge(branchA string, branchB string) error {}
+
+========== cmd/app/message.go ==========
+package app
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"strings"
+	"time"
+
+	"github.com/openai/openai-go/v2"
+)
+
+// SendMessage sends a message to the last active conversation and returns the assistant's response
+func SendMessage(client ChatClient, msg string) (string, error) {
+	// Load last conversation
+	configPath := "./.sidebar/sidebar-config.yaml"
+	convo, err := ConversationfromJSON(configPath)
+	if err != nil {
+		return "", fmt.Errorf("error creating conversation struct: %w", err)
+	}
+
+	// Prepare OpenAI request by appending the new user message
+	param := openai.ChatCompletionNewParams{
+		Messages: []openai.ChatCompletionMessageParamUnion{
+			openai.AssistantMessage(convo.Messages[convo.LastMessageID].Content),
+			openai.UserMessage(msg),
+		},
+		Seed:  openai.Int(convo.Seed),
+		Model: openai.ChatModelGPT4o,
+	}
+
+	// Create new user message
+	userMessageID, _ := CreateUUIDv4()
+	userMessage := Message{
+		MessageID: userMessageID,
+		ParentIDs: []string{convo.LastMessageID},
+		Timestamp: time.Now(),
+		Role:      "user",
+		Content:   msg,
+	}
+
+	// Commit to move Head
+	if err := convo.CommitHead(&userMessage); err != nil {
+		return userMessage.Content, fmt.Errorf("commit failed: %v", err)
+	}
+
+	// Commit to file
+	if err := convo.CommitCoversation(convo.Path); err != nil {
+		return "", fmt.Errorf("error committing updated conversation: %w", err)
+	}
+
+	// Create new assistant message
+	assistantmessageID, _ := CreateUUIDv4()
+	assistantMessage := Message{
+		MessageID: assistantmessageID,
+		ParentIDs: []string{convo.LastMessageID},
+		Timestamp: time.Now(),
+	}
+
+	// Call OpenAI
+	completion, err := client.ChatCompletion(context.Background(), param)
+	if err != nil {
+		// Parse error JSON if present
+		errString := err.Error()
+		idx := strings.Index(errString, "{")
+		if idx != -1 {
+			jsonPart := errString[idx:]
+			var errResp OpenAIError
+			if e := json.Unmarshal([]byte(jsonPart), &errResp); e == nil {
+				assistantMessage.ErrorResponse = errResp.Message
+			}
+		}
+	} else {
+		assistantMessage.Role = string(completion.Choices[0].Message.Role)
+		assistantMessage.Content = string(completion.Choices[0].Message.Content)
+	}
+
+	// Commit to move Head
+	if err := convo.CommitHead(&assistantMessage); err != nil {
+		return assistantMessage.Content, fmt.Errorf("commit failed: %v", err)
+	}
+
+	// Commit to file
+	if err := convo.CommitCoversation(convo.Path); err != nil {
+		return "", fmt.Errorf("error committing updated conversation: %w", err)
+	}
+
+	return assistantMessage.Content, nil
+}
+========== cmd/app/message_test.go ==========
+package app_test
+
+// Test Helpers ---------------------------------------------------------------
+
+// Test message.go ------------------------------------------------------------
+
+// Pre-Test Steps
+// Populate Conversation Struct with Message(s)
+// Write Conversation Struct to File
+
+// Tests to write
+// 1. Message isn't malformed on creation
+// 2. ChatCompletion parsed
+// 3. Validate LastMessageID is updated
+// 4. Commit applied
+//     A. File saved
+//     B. Config updated
+//     C. Head updated
+// 5. Client returns error (403 - insufficient_quota)
+
+========== cmd/app/pin.go ==========
+package app
+
+// Add message to pinned message map
+func (c *Conversation) PinMessage(messageID string) bool {
+	// Don't pin if conversation is archived
+	if c.Archive {
+		return false
+	}
+
+	// Check to see if message is already in pinned
+	if _, exists := c.Pinned[messageID]; exists {
+		// If yes, don't pin again
+		return false
+	}
+
+	c.Pinned[messageID] = c.Messages[messageID]
+	return true
+}
+
+// Remove message from pinned message map
+func (c *Conversation) UnpinMessage(messageID string) bool {
+	// Don't unpin if conversation is archived
+	if c.Archive {
+		return false
+	}
+
+	// Check to see if message is already in pinned
+	if _, exists := c.Pinned[messageID]; exists {
+		// If yes, unpin
+		delete(c.Pinned, messageID)
+		return true
+	}
+
+	return false
+}
+
+========== cmd/app/pin_test.go ==========
+package app_test
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/require"
+	"github.com/wholesomeow/chatwrapper/cmd/app"
+)
+
+// Test pin.go ----------------------------------------------------------------
+
+func TestPinMessage_TestTable(t *testing.T) {
+	tests := []struct {
+		name          string
+		setup         func(t *testing.T, baseDir string)
+		mockClient    app.ChatClient
+		expectErr     bool
+		expectErrPart string
+		verify        func(t *testing.T, convo *app.Conversation)
+	}{
+		{
+			name: "Pin Message",
+			setup: func(t *testing.T, baseDir string) {
+				setupFakeSidebarEnv(t)
+			},
+			mockClient: &app.MockClient{
+				MockResponse: &app.MockCompletion,
+			},
+			expectErr: false,
+			verify: func(t *testing.T, convo *app.Conversation) {
+				res := convo.PinMessage(convo.LastMessageID)
+				require.True(t, res)
+				require.Len(t, convo.Pinned, 1)
+			},
+		},
+		{
+			name: "Unpin Message",
+			setup: func(t *testing.T, baseDir string) {
+				setupFakeSidebarEnv(t)
+			},
+			mockClient: &app.MockClient{
+				MockResponse: &app.MockCompletion,
+			},
+			expectErr: false,
+			verify: func(t *testing.T, convo *app.Conversation) {
+				// Pin Message first
+				convo.PinMessage(convo.LastMessageID)
+
+				res := convo.UnpinMessage(convo.LastMessageID)
+				require.True(t, res)
+				require.Len(t, convo.Pinned, 0)
+			},
+		},
+		{
+			name: "Pin Message Archived Convo",
+			setup: func(t *testing.T, baseDir string) {
+				setupFakeSidebarEnv(t)
+			},
+			mockClient: &app.MockClient{
+				MockResponse: &app.MockCompletion,
+			},
+			expectErr: false,
+			verify: func(t *testing.T, convo *app.Conversation) {
+				// Archive conversation first
+				convo.ArchiveConversation()
+				convo.PinMessage(convo.LastMessageID)
+				require.Len(t, convo.Pinned, 0)
+			},
+		},
+		{
+			name: "Unpin Message Archived Convo",
+			setup: func(t *testing.T, baseDir string) {
+				setupFakeSidebarEnv(t)
+			},
+			mockClient: &app.MockClient{
+				MockResponse: &app.MockCompletion,
+			},
+			expectErr: false,
+			verify: func(t *testing.T, convo *app.Conversation) {
+				// Pin Message first
+				convo.PinMessage(convo.LastMessageID)
+
+				// Then archive conversation
+				convo.ArchiveConversation()
+				convo.UnpinMessage(convo.LastMessageID)
+				require.Len(t, convo.Pinned, 1)
+			},
+		},
+	}
+
+	// Test the test cases in the table
+	for _, testcase := range tests {
+		t.Run(testcase.name, func(t *testing.T) {
+			baseDir := t.TempDir()
+			testcase.setup(t, baseDir)
+
+			// Check the errors we are expecting
+			topic := "testing topic for chatbot wrapper application"
+			convo, err := app.StartNewConversation(testcase.mockClient, topic)
+			if testcase.expectErr {
+				require.Error(t, err)
+				if testcase.expectErrPart != "" {
+					require.Contains(t, err.Error(), testcase.expectErrPart)
+				}
+				return
+			}
+
+			// Make sure the test case is ready to be verified
+			// AKA the conversation built correctly
+			require.NoError(t, err)
+			require.NotNil(t, convo)
+			require.NotEmpty(t, convo.ConversationID)
+			require.NotEmpty(t, convo.LastMessageID)
+
+			// If there is a verification step, run it
+			if testcase.verify != nil {
+				testcase.verify(t, convo)
+			}
+		})
+	}
+}
+
+========== cmd/app/utilities.go ==========
+package app
+
+import (
+	"crypto/rand"
+	"encoding/hex"
+	"encoding/json"
+	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+
+	"gopkg.in/yaml.v2"
+)
+
+// TODO: Move git-like functions to own file
+// TODO: Reorganize functions so it's not a bland utility file
+
+// CopyFile copies a file from src to dst.
+func CopyFile(src string, dstDir string) error {
+	// Open the source file for reading
+	srcFile, err := os.Open(src)
+	if err != nil {
+		return fmt.Errorf("failed to open source file: %w", err)
+	}
+	defer srcFile.Close() // Ensure the source file is closed
+
+	// Get the base name of the source file
+	fileName := filepath.Base(src)
+	// Construct the full path for the destination file
+	dstPath := filepath.Join(dstDir, fileName)
+
+	// Create the destination file in the target directory
+	// 0644 grants read/write for owner, read-only for others
+	dstFile, err := os.Create(dstPath)
+	if err != nil {
+		return fmt.Errorf("failed to create destination file: %w", err)
+	}
+	defer dstFile.Close() // Ensure the destination file is closed
+
+	// Copy the contents from the source to the destination
+	_, err = io.Copy(dstFile, srcFile)
+	if err != nil {
+		return fmt.Errorf("failed to copy file contents: %w", err)
+	}
+
+	// Optionally, sync the destination file to ensure data is written to disk
+	err = dstFile.Sync()
+	if err != nil {
+		return fmt.Errorf("failed to sync destination file: %w", err)
+	}
+
+	return nil
+}
+
+// Appropriated from github.com/google/uuid
+func encodeHex(dst []byte, uuid [16]byte) {
+	hex.Encode(dst, uuid[:4])
+	dst[8] = '-'
+	hex.Encode(dst[9:13], uuid[4:6])
+	dst[13] = '-'
+	hex.Encode(dst[14:18], uuid[6:8])
+	dst[18] = '-'
+	hex.Encode(dst[19:23], uuid[8:10])
+	dst[23] = '-'
+	hex.Encode(dst[24:], uuid[10:])
+}
+
+// Appropriated from github.com/google/uuid
+func CreateUUIDv4() (string, error) {
+	uuid := [16]byte{}
+	rand_reader := rand.Reader
+
+	// Reads in uuid len amount of bytes of random numbers
+	_, err := io.ReadFull(rand_reader, uuid[:])
+	if err != nil {
+		return "", err
+	}
+
+	// Changes the bits specified for the Version & Variant
+	uuid[6] = (uuid[6] & 0x0f) | 0x40 // Version 4
+	uuid[8] = (uuid[8] & 0x3f) | 0x3f // Variant 10
+
+	// Creates a buffer and takes the bytes from the uuid and
+	// encodes them into hexadecimal, replacing the appropriate
+	// char with "-" to output the uuid as a string
+	var buf [36]byte
+	encodeHex(buf[:], uuid)
+
+	return string(buf[:]), nil
+}
+
+// Creates a SHA-256 hash from an input string
+// func createSHA256(input string) string {
+// 	hash := sha256.New()
+// 	hash.Write([]byte(input))
+// 	byte_slice := hash.Sum(nil)
+// 	out_string := string(byte_slice)
+
+// 	return out_string
+// }
+
+func ReadJSON(path string) ([]byte, error) {
+	var nil_data []byte
+
+	// Open JSON File
+	f, err := os.Open(path)
+	if err != nil {
+		return nil_data, err
+	}
+	defer f.Close()
+
+	// Read JSON File
+	byte_value, err := io.ReadAll(f)
+	if err != nil {
+		return nil_data, err
+	}
+
+	return byte_value, nil
+}
+
+// WriteJSON writes JSON data to a file
+func WriteJSON(path string, data []byte) error {
+	if err := os.WriteFile(path, data, 0644); err != nil {
+		return fmt.Errorf("error writing JSON to file: %w", err)
+	}
+	return nil
+}
+
+func parseJSONToSlice(data interface{}) [][]string {
+	var result [][]string
+
+	// Check the type of the data and handle accordingly
+	switch v := data.(type) {
+	case map[string]interface{}:
+		// If it's a map, traverse the keys and values recursively
+		for _, value := range v {
+			// Recursively process each value in the map
+			result = append(result, parseJSONToSlice(value)...)
+		}
+
+	case []interface{}:
+		// If it's a slice, iterate through the elements and process each one
+		for _, item := range v {
+			// Recursively process each item in the slice
+			result = append(result, parseJSONToSlice(item)...)
+		}
+
+	case string:
+		// If it's a string, add it as a single-element slice
+		result = append(result, []string{v})
+
+	case float64:
+		// If it's a number, convert it to string and add it as a single-element slice
+		result = append(result, []string{fmt.Sprintf("%f", v)})
+
+	case bool:
+		// If it's a boolean, convert it to string and add it as a single-element slice
+		result = append(result, []string{fmt.Sprintf("%t", v)})
+
+	default:
+		// For any other data type, handle it by converting it to string
+		result = append(result, []string{fmt.Sprintf("%v", v)})
+	}
+
+	return result
+}
+
+func JSONToSlice(data []byte) ([][]string, error) {
+	// Use a generic map to unmarshal the JSON data
+	var temp interface{}
+	if err := json.Unmarshal(data, &temp); err != nil {
+		return nil, fmt.Errorf("error unmarshaling JSON: %w", err)
+	}
+
+	// Parse the data into a nested slice of strings
+	return parseJSONToSlice(data), nil
+}
+
+// JSONToStruct takes raw JSON bytes and unmarshals into a Conversation struct
+func JSONToStruct(data []byte) (*Conversation, error) {
+	var conv *Conversation
+	if err := json.Unmarshal(data, &conv); err != nil {
+		return nil, fmt.Errorf("error unmarshaling JSON to struct: %w", err)
+	}
+	return conv, nil
+}
+
+// StructToJSON marshals a Conversation struct back to pretty-printed JSON
+func StructToJSON(str any) ([]byte, error) {
+	data, err := json.MarshalIndent(str, "", "  ")
+	if err != nil {
+		return nil, fmt.Errorf("error marshaling struct to JSON: %w", err)
+	}
+	return data, nil
+}
+
+func ConversationfromJSON(configPath string) (*Conversation, error) {
+	// Load config file and unmarshall into struct
+	var config Config
+	configFile, err := os.ReadFile(configPath)
+	if err != nil {
+		return nil, fmt.Errorf("error reading config: %w", err)
+	}
+	if err := yaml.Unmarshal(configFile, &config); err != nil {
+		return nil, fmt.Errorf("error unmarshaling YAML: %w", err)
+	}
+
+	convoFile := fmt.Sprintf("convo_%s.json", config.LastConversationID)
+	convoPath := filepath.Join("./.sidebar", convoFile)
+
+	if _, err := os.Stat(convoPath); os.IsNotExist(err) {
+		return nil, fmt.Errorf("conversation file '%s' not found", convoPath)
+	}
+
+	// Load conversation history
+	data, err := ReadJSON(convoPath)
+	if err != nil {
+		return nil, fmt.Errorf("error reading conversation JSON: %w", err)
+	}
+
+	// Create new converstion struct and unmarshall data into it
+	var convo Conversation
+	if err := json.Unmarshal(data, &convo); err != nil {
+		return nil, fmt.Errorf("error unmarshaling conversation JSON: %w", err)
+	}
+
+	return &convo, nil
+}
+
+func UpdateConversationID(yamlFile string, conversationID string) error {
+	f, err := os.ReadFile(yamlFile)
+	if err != nil {
+		fmt.Printf("Error reading file %s: %v\n", yamlFile, err)
+	}
+
+	var config Config
+	err = yaml.Unmarshal([]byte(f), &config)
+	if err != nil {
+		fmt.Printf("Error unmarshaling YAML: %v\n", err)
+	}
+	config.LastConversationID = conversationID
+
+	updatedYAML, err := yaml.Marshal(&config)
+	if err != nil {
+		return err
+	}
+	err = os.WriteFile(yamlFile, updatedYAML, 0644)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+========== cmd/cli/archive.go ==========
+package cli
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/spf13/cobra"
+)
+
+func sidebarArchive(sessionID string) string {
+	return fmt.Sprintf("Session %s resumed\n", sessionID)
+}
+
+var sessionArchiveCmd = &cobra.Command{
+	Use:  "archive",
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		if _, err := fmt.Fprint(os.Stdout, sidebarArchive(args[0])); err != nil {
+			fmt.Fprintf(os.Stderr, "failed to write output: %v\n", err)
+			os.Exit(1)
+		}
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(sessionArchiveCmd)
+}
+
+========== cmd/cli/convo_list.go ==========
+package cli
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+
+	"github.com/spf13/cobra"
+	"github.com/wholesomeow/chatwrapper/cmd/app"
+)
+
+var sessionListConversationsCmd = &cobra.Command{
+	Use: "list",
+	Run: func(cmd *cobra.Command, args []string) {
+		// Get the folder path from a flag or default to current directory + config
+		folderPath, _ := cmd.Flags().GetString("folder")
+		if folderPath == "" {
+			exePath, _ := os.Executable()
+			exeDir := filepath.Dir(exePath)
+			folderPath = filepath.Join(exeDir, ".sidebar", "conversations")
+		}
+
+		conversations, err := app.ListConversations(folderPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %s\n", err)
+			os.Exit(1)
+		}
+
+		// Fancy printout for user
+		fmt.Printf(`
+Conversation Name
+-------------------------------------------------
+`)
+
+		for _, name := range conversations {
+			fmt.Printf(`
+%s
+`, name)
+		}
+	},
+}
+
+func init() {
+	// Add optional flag to specify a folder path
+	sessionListConversationsCmd.Flags().String("folder", "", "Base folder path for conversations")
+	rootCmd.AddCommand(sessionListConversationsCmd)
+}
+
+========== cmd/cli/help.go ==========
+package cli
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/spf13/cobra"
+)
+
+var helpMsg = `sidebar — Chat Version Control CLI
+Manage AI-assisted conversations with sessions, commits, branches, tangents, and exports.
+
+Usage:
+  sidebar <command> [options]
+
+Core Commands:
+
+  Sessions:
+    init "<topic>"                         Start a new chat session with description
+    resume <session-id>                    Resume an existing chat session
+    exit                                   Exit the current chat session
+    archive <session-id>                   Archive a chat session
+    sessions                               List all existing sessions
+
+  Commits:
+    log                                    Show commit history for the current session
+    msg "<message>"                        Send a new message to the current chat
+    pin "<message-id>"                     Pins a message for quick reference
+    commit -m "<message>"                  Commit current conversation to current session
+    diff <commitA> <commitB>               Show differences between two commits or conversation branches
+
+  Branches:
+    branch <name> -from <commit>           Create a new branch from a commit
+    checkout <name>                        Switch to the specified branch
+    branch-delete <name>                   Delete a branch
+    list branches                          List all branches
+
+  Tangents:
+    tangent "<message>"                    Create a tangent (short-lived side branch)
+    tangent-expand <tangent-id>            Promote tangent into a full branch
+    tangent-resolve <tangent-id>           Resolve tangent and delete branch
+    tangent-resolve all                    Resolve all tangents
+    tangent-list                           List all open tangents
+
+  Merges:
+    merge <branchA> <branchB> -m "<msg>"   Merge branches with a message
+
+  Hooks:
+    hooks config                           Edit pre-commit hook configuration
+
+  Export:
+    export <message-id> <doc-title>        Export a message to Markdown
+    export <conversation-id> <doc-title>   Export a conversation to Markdown
+
+Options:
+  help                                     Show help for sidebar or a specific command
+  version                                  Show version information`
+
+var helpCmd = &cobra.Command{
+	Use:   "help",
+	Short: "displays sidebar help",
+	Long:  "Show help for sidebar or a specific command",
+	Run: func(cmd *cobra.Command, args []string) {
+		if _, err := fmt.Fprint(os.Stdout, helpMsg); err != nil {
+			fmt.Fprintf(os.Stderr, "failed to write output: %v\n", err)
+			os.Exit(1)
+		}
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(helpCmd)
+}
+
+========== cmd/cli/init.go ==========
+package cli
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/spf13/cobra"
+	"github.com/wholesomeow/chatwrapper/cmd/app"
+)
+
+var sessionInitCmd = &cobra.Command{
+	Use:  "init <topic>",
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		topic := args[0]
+
+		client := app.NewOpenAIClient()
+		convo, err := app.StartNewConversation(client, topic)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %s\n", err)
+			os.Exit(1)
+		}
+
+		// Fancy printout for user
+		fmt.Printf(`
+	                *** New Session initiated ***
+*** To respond back to the assistant, use 'sidebar msg "your response"' ***
+
+    - Conversation ID: %s
+    - Seed: %d
+    - Topic: %s
+
+Assistant: %s
+`, convo.ConversationID, convo.Seed, convo.Topic, convo.Messages[convo.LastMessageID].Content)
+
+		// TODO: Add optional verbosity flag to print raw params/debug info
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(sessionInitCmd)
+}
+
+========== cmd/cli/msg.go ==========
+package cli
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/spf13/cobra"
+	"github.com/wholesomeow/chatwrapper/cmd/app"
+)
+
+var sessionMsgCmd = &cobra.Command{
+	Use:  "msg",
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		msg := args[0]
+
+		client := app.NewOpenAIClient()
+		assistantMsg, err := app.SendMessage(client, msg)
+		if err != nil {
+			if _, err = fmt.Fprintf(os.Stderr, "Error sending message: %v\n", err); err != nil {
+				fmt.Fprintf(os.Stderr, "failed to write output: %v\n", err)
+				os.Exit(1)
+			}
+			os.Exit(1)
+		}
+
+		fmt.Fprintf(os.Stdout, "Assistant: %s\n", assistantMsg)
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(sessionMsgCmd)
+}
+
+========== cmd/cli/resume.go ==========
+package cli
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/spf13/cobra"
+)
+
+func sidebarResume(sessionID string) string {
+	return fmt.Sprintf("Session %s resumed\n", sessionID)
+}
+
+var sessionResumeCmd = &cobra.Command{
+	Use:  "resume",
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Fprint(os.Stdout, sidebarResume(args[0]))
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(sessionResumeCmd)
+}
+
+========== cmd/cli/root.go ==========
+package cli
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/spf13/cobra"
+	"github.com/wholesomeow/chatwrapper/cmd/app"
+)
+
+type Config struct {
+	APIKEY             string `yaml:"API_KEY"`
+	LastConversationID string `yaml:"lastConversationID"`
+}
+
+var welcomeMsg string = `
+Welcome to Sidebar!
+
+To get started run: sidebar init "<topic>"
+For help, run: sidebar help
+
+To change application settings, edit the sidebar-config.yaml file in the .sidebar directory
+Need help? Checkout the repo: https://github.com/wholesomeow/sidebar`
+
+var rootCmd = &cobra.Command{
+	Use:   "sidebar",
+	Short: "Chat Version Control CLI",
+	Long:  "Manage AI-assisted conversations with sessions, commits, branches, tangents, and exports.",
+	Run: func(cmd *cobra.Command, args []string) {
+		if err := app.SetupConfig(); err != nil {
+			if _, err = fmt.Fprintf(os.Stderr, "Error: %v\n", err); err != nil {
+				fmt.Fprintf(os.Stderr, "failed to write output: %v\n", err)
+				os.Exit(1)
+			}
+		}
+
+		fmt.Println(welcomeMsg)
+
+		apiKey, err := app.InitAPIKey()
+		if err != nil {
+			if _, err = fmt.Fprintf(os.Stderr, "Error: %v\n", err); err != nil {
+				fmt.Fprintf(os.Stderr, "failed to write output: %v\n", err)
+				os.Exit(1)
+			}
+			return
+		}
+		if _, err = fmt.Fprintf(os.Stdout, "API Key: %s\n", apiKey); err != nil {
+			fmt.Fprintf(os.Stderr, "failed to write output: %v\n", err)
+			os.Exit(1)
+		}
+	},
+}
+
+func Execute() {
+	if err := rootCmd.Execute(); err != nil {
+		if _, err = fmt.Fprintf(os.Stderr, "Error: %s\n", err); err != nil {
+			fmt.Fprintf(os.Stderr, "failed to write output: %v\n", err)
+			os.Exit(1)
+		}
+		os.Exit(1)
+	}
+}
+
+========== cmd/cli/start.go ==========
+package cli
+
+import (
+	"fmt"
+
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+	"github.com/spf13/cobra"
+	"github.com/wholesomeow/chatwrapper/cmd/api"
+)
+
+var startServer = &cobra.Command{
+	Use:   "start",
+	Short: "Start the Sidebar backend",
+	Long:  "Starts the Sidebar Gin backend for the Sidebar webapp",
+	Run: func(cmd *cobra.Command, args []string) {
+		StartBackendServer()
+	},
+}
+
+func Start() {
+	rootCmd.AddCommand(startServer)
+}
+
+func StartBackendServer() {
+	fmt.Println("Server starting...")
+	r := gin.Default()
+
+	// Initializing CORS
+	r.Use(cors.New(cors.Config{
+		AllowOrigins: []string{"http://localhost:5173"},
+		AllowMethods: []string{"GET"},
+		AllowHeaders: []string{"Content-Type"},
+	}))
+
+	endpoints := r.Group("/api/v1")
+	{
+		convo := endpoints.Group("/conversations")
+		{
+			convo.GET("", api.ListConversations)
+			convo.POST("", api.CreateConversation)
+			convo.GET("/:id", api.GetConversation)
+			convo.DELETE("/:id", api.DeleteConversation)
+
+			msg := convo.Group("/:id/messages")
+			{
+				msg.POST("", api.SendMessage)
+				msg.GET("", api.GetMessages)
+				msg.DELETE("/:msg_id", api.DeleteMessage)
+			}
+		}
+	}
+
+	r.Run(":8080")
+
+	fmt.Println("Server successfully started!")
+}
+

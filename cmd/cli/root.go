@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/wholesomeow/chatwrapper/cmd/app"
+	"github.com/wholesomeow/chatwrapper/cmd/config"
 )
 
 type Config struct {
@@ -14,49 +14,38 @@ type Config struct {
 }
 
 var welcomeMsg string = `
-Welcome to Sidebar!
+Welcome to Arbor!
 
-To get started run: sidebar init "<topic>"
-For help, run: sidebar help
-
-To change application settings, edit the sidebar-config.yaml file in the .sidebar directory
-Need help? Checkout the repo: https://github.com/wholesomeow/sidebar`
+To get started: arbor init "<topic>"
+For help:       arbor help
+Config lives at: `
 
 var rootCmd = &cobra.Command{
 	Use:   "sidebar",
 	Short: "Chat Version Control CLI",
 	Long:  "Manage AI-assisted conversations with sessions, commits, branches, tangents, and exports.",
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := app.SetupConfig(); err != nil {
-			if _, err = fmt.Fprintf(os.Stderr, "Error: %v\n", err); err != nil {
-				fmt.Fprintf(os.Stderr, "failed to write output: %v\n", err)
-				os.Exit(1)
-			}
-		}
-
-		fmt.Println(welcomeMsg)
-
-		apiKey, err := app.InitAPIKey()
+		globalCfg, err := config.LoadGlobalConfig()
 		if err != nil {
-			if _, err = fmt.Fprintf(os.Stderr, "Error: %v\n", err); err != nil {
-				fmt.Fprintf(os.Stderr, "failed to write output: %v\n", err)
-				os.Exit(1)
-			}
-			return
-		}
-		if _, err = fmt.Fprintf(os.Stdout, "API Key: %s\n", apiKey); err != nil {
-			fmt.Fprintf(os.Stderr, "failed to write output: %v\n", err)
+			fmt.Fprintf(os.Stderr, "Error loading config: %v\n", err)
 			os.Exit(1)
+		}
+
+		configPath, _ := config.GetGlobalConfigPath()
+		fmt.Println(welcomeMsg + configPath)
+
+		if globalCfg.Providers.OpenAI.APIKey != "" {
+			key := globalCfg.Providers.OpenAI.APIKey
+			fmt.Printf("OpenAI key: %s...%s\n", key[:3], key[len(key)-4:])
+		} else {
+			fmt.Println("OpenAI key: not set (edit config to add)")
 		}
 	},
 }
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		if _, err = fmt.Fprintf(os.Stderr, "Error: %s\n", err); err != nil {
-			fmt.Fprintf(os.Stderr, "failed to write output: %v\n", err)
-			os.Exit(1)
-		}
+		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
 		os.Exit(1)
 	}
 }

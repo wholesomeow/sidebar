@@ -18,8 +18,8 @@ function startBackend() {
 
   const child = spawn(binary, [], { stdio: "pipe" });
 
-  child.stdout.on("data", (data) => console.log(`[Go Backend]: ${data}`));
-  child.stderr.on("data", (data) => console.error(`[Go Backend Error]: ${data}`));
+  child.stdout.on("data", (data) => console.log(`[Sidebar]: ${data}`));
+  child.stderr.on("data", (data) => console.error(`[Sidebar Error]: ${data}`));
 
   return child;
 }

@@ -8,8 +8,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-
-	"gopkg.in/yaml.v2"
 )
 
 // TODO: Move git-like functions to own file
@@ -192,62 +190,4 @@ func StructToJSON(str any) ([]byte, error) {
 		return nil, fmt.Errorf("error marshaling struct to JSON: %w", err)
 	}
 	return data, nil
-}
-
-func ConversationfromJSON(configPath string) (*Conversation, error) {
-	// Load config file and unmarshall into struct
-	var config Config
-	configFile, err := os.ReadFile(configPath)
-	if err != nil {
-		return nil, fmt.Errorf("error reading config: %w", err)
-	}
-	if err := yaml.Unmarshal(configFile, &config); err != nil {
-		return nil, fmt.Errorf("error unmarshaling YAML: %w", err)
-	}
-
-	convoFile := fmt.Sprintf("convo_%s.json", config.LastConversationID)
-	convoPath := filepath.Join("./.sidebar", convoFile)
-
-	if _, err := os.Stat(convoPath); os.IsNotExist(err) {
-		return nil, fmt.Errorf("conversation file '%s' not found", convoPath)
-	}
-
-	// Load conversation history
-	data, err := ReadJSON(convoPath)
-	if err != nil {
-		return nil, fmt.Errorf("error reading conversation JSON: %w", err)
-	}
-
-	// Create new converstion struct and unmarshall data into it
-	var convo Conversation
-	if err := json.Unmarshal(data, &convo); err != nil {
-		return nil, fmt.Errorf("error unmarshaling conversation JSON: %w", err)
-	}
-
-	return &convo, nil
-}
-
-func UpdateConversationID(yamlFile string, conversationID string) error {
-	f, err := os.ReadFile(yamlFile)
-	if err != nil {
-		fmt.Printf("Error reading file %s: %v\n", yamlFile, err)
-	}
-
-	var config Config
-	err = yaml.Unmarshal([]byte(f), &config)
-	if err != nil {
-		fmt.Printf("Error unmarshaling YAML: %v\n", err)
-	}
-	config.LastConversationID = conversationID
-
-	updatedYAML, err := yaml.Marshal(&config)
-	if err != nil {
-		return err
-	}
-	err = os.WriteFile(yamlFile, updatedYAML, 0644)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

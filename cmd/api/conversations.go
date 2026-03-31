@@ -13,11 +13,15 @@ type FakeData struct {
 	Data string
 }
 
-func ListConversations(c *gin.Context) {
-	// Call the function and process any errors
-	// Frontend can send ?path=...
-	folderPath := c.Query("path")
-	conversations, err := app.ListConversations(folderPath)
+func (h *Handler) ListConversations(c *gin.Context) {
+	// Optional override from query param
+	// otherwise, use project config path
+	dir := c.Query("path")
+	if dir == "" {
+		dir = h.convoDir()
+	}
+
+	conversations, err := app.ListConversations(dir)
 	if err != nil {
 		msg := fmt.Sprintf("Conversation collection failed: %s", err)
 		status, response := Response500(msg)
@@ -35,13 +39,12 @@ func ListConversations(c *gin.Context) {
 	})
 }
 
-func CreateConversation(c *gin.Context) {
+func (h *Handler) CreateConversation(c *gin.Context) {
 	// Get content from "form"
 	topic := c.PostForm("topic")
 
 	// Create new conversation
-	client := app.NewOpenAIClient()
-	conversation, err := app.StartNewConversation(client, topic)
+	conversation, err := app.StartNewConversation(h.Client, topic, h.ProjectRoot)
 	if err != nil {
 		msg := fmt.Sprintf("Failed to create new Conversation: %s", err)
 		status, response := Response500(msg)
@@ -69,11 +72,10 @@ func CreateConversation(c *gin.Context) {
 	})
 }
 
-func GetConversation(c *gin.Context) {
-	// Call the function and process any errors
-	// Frontend can send ?path=...
-	folderPath := c.Query("path")
-	convo, err := app.GetConversation(folderPath)
+func (h *Handler) GetConversation(c *gin.Context) {
+	id := c.Param("id")
+
+	convo, err := app.GetConversation(h.convoDir(), id)
 	if err != nil {
 		msg := fmt.Sprintf("Failed to get messages from conversation: %s", err)
 		status, response := Response500(msg)
@@ -91,7 +93,7 @@ func GetConversation(c *gin.Context) {
 	})
 }
 
-func DeleteConversation(c *gin.Context) {
+func (h *Handler) DeleteConversation(c *gin.Context) {
 	// TODO: Implement conversation deletion
 	// if err != nil {
 	// 	msg := fmt.Sprintf("NPC name generation failed: %s", err)

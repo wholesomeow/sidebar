@@ -2,11 +2,11 @@ package app
 
 import (
 	"context"
-	"os"
 	"time"
 
 	"github.com/openai/openai-go/v2"
 	"github.com/openai/openai-go/v2/option"
+	"github.com/wholesomeow/chatwrapper/cmd/config"
 )
 
 type ChatClient interface {
@@ -18,17 +18,9 @@ type OpenAIClient struct {
 	client *openai.Client
 }
 
-func NewOpenAIClient() *OpenAIClient {
-	// Prep the API Key, one way or another
-	apiKey := os.Getenv("OPENAI_API_KEY")
-	if len(apiKey) == 0 {
-		apiKey = GetAPIKey()
-	}
-
-	// TODO: Figure out why this works but
-	// client.client = &openai.NewClient(option.WithAPIKey(apiKey)) does not
+func NewOpenAIClient(cfg *config.GlobalConfig) *OpenAIClient {
 	var client OpenAIClient
-	newclient := openai.NewClient(option.WithAPIKey(apiKey))
+	newclient := openai.NewClient(option.WithAPIKey(cfg.Providers.OpenAI.APIKey))
 	client.client = &newclient
 
 	return &client

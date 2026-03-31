@@ -14,13 +14,23 @@ type SingleMessage struct {
 	Message string
 }
 
-func SendMessage(c *gin.Context) {
+func (h *Handler) SendMessage(c *gin.Context) {
 	// Get content from "form"
+	id := c.Param("id")
 	msg := c.PostForm("message")
 
-	// Create new conversation
-	client := app.NewOpenAIClient()
-	content, err := app.SendMessage(client, msg)
+	// Load existing conversation
+	convo, err := app.GetConversation(h.convoDir(), id)
+	if err != nil {
+		msg := fmt.Sprintf("Failed to load conversation: %s", err)
+		status, response := Response500(msg)
+		c.JSON(status, response)
+
+		return
+	}
+
+	// Get conversation context to send with message
+	content, err := app.SendMessage(h.Client, convo, msg)
 	if err != nil {
 		msg := fmt.Sprintf("Failed to send message: %s", err)
 		status, response := Response500(msg)
@@ -29,26 +39,21 @@ func SendMessage(c *gin.Context) {
 		return
 	}
 
-	message := SingleMessage{
-		Message: content,
-	}
-
-	data, _ := json.MarshalIndent(message, "", "  ")
+	data, _ := json.MarshalIndent(SingleMessage{Message: content}, "", "  ")
 
 	// Populate the context
 	c.JSON(http.StatusOK, Response{
 		Status:    http.StatusText(http.StatusOK),
-		Message:   "Conversations listed successfully",
+		Message:   "Message sent successfully",
 		Data:      data,
 		Timestamp: time.Now(),
 	})
 }
 
-func GetMessages(c *gin.Context) {
-	// Call the function and process any errors
-	// Frontend can send /:id/...
+func (h *Handler) GetMessages(c *gin.Context) {
 	id := c.Param("id")
-	convo, err := app.GetConversation(id)
+
+	convo, err := app.GetConversation(h.convoDir(), id)
 	if err != nil {
 		msg := fmt.Sprintf("Failed to get messages from conversation: %s", err)
 		status, response := Response500(msg)
@@ -60,16 +65,16 @@ func GetMessages(c *gin.Context) {
 	// Populate the context
 	c.JSON(http.StatusOK, Response{
 		Status:    http.StatusText(http.StatusOK),
-		Message:   "Conversations listed successfully",
+		Message:   "Retrieved messages successfully",
 		Data:      convo.Messages,
 		Timestamp: time.Now(),
 	})
 }
 
-func DeleteMessage(c *gin.Context) {
+func (h *Handler) DeleteMessage(c *gin.Context) {
 	// TODO: Implement MessageID as passed param to then delete message from conversation
 	// if err != nil {
-	// 	msg := fmt.Sprintf("NPC name generation failed: %s", err)
+	// 	msg := fmt.Sprintf("Failed to delete message: %s", err)
 	// 	status, response := Response500(msg)
 	// 	c.JSON(status, response)
 	// }
