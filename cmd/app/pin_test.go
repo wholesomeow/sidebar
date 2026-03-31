@@ -1,6 +1,7 @@
 package app_test
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -88,6 +89,8 @@ func TestPinMessage_TestTable(t *testing.T) {
 		},
 	}
 
+	projectRoot, _ := os.Getwd()
+
 	// Test the test cases in the table
 	for _, testcase := range tests {
 		t.Run(testcase.name, func(t *testing.T) {
@@ -96,7 +99,7 @@ func TestPinMessage_TestTable(t *testing.T) {
 
 			// Check the errors we are expecting
 			topic := "testing topic for chatbot wrapper application"
-			convo, err := app.StartNewConversation(testcase.mockClient, topic)
+			convo, err := app.StartNewConversation(testcase.mockClient, topic, projectRoot)
 			if testcase.expectErr {
 				require.Error(t, err)
 				if testcase.expectErrPart != "" {

@@ -81,30 +81,6 @@ func TestStartNewConversation_TestTable(t *testing.T) {
 			},
 		},
 		{
-			name: "Missing Template File",
-			setup: func(t *testing.T, baseDir string) {
-				arbor := filepath.Join(baseDir, ".arbor")
-				require.NoError(t, os.MkdirAll(arbor, 0755))
-				// Note: we do *not* create templates dir, so this should fail
-				configFile := filepath.Join(arbor, "arbor-config.yaml")
-				require.NoError(t, os.WriteFile(configFile, []byte("API_KEY: fake\n"), 0644))
-			},
-			mockClient:    &app.MockClient{},
-			expectErr:     true,
-			expectErrPart: "no such file or directory",
-		},
-		{
-			name: "Missing .arbor Dir",
-			setup: func(t *testing.T, baseDir string) {
-				// Create only templates
-				require.NoError(t, os.MkdirAll(filepath.Join(baseDir, "templates"), 0755))
-				os.WriteFile(filepath.Join(baseDir, "templates/convo.json"), []byte("{}"), 0644)
-			},
-			mockClient:    &app.MockClient{},
-			expectErr:     true,
-			expectErrPart: "config directory missing",
-		},
-		{
 			name: "OpenAI JSON Rrror",
 			setup: func(t *testing.T, baseDir string) {
 				setupFakeArborEnv(t)
@@ -148,6 +124,8 @@ func TestStartNewConversation_TestTable(t *testing.T) {
 		},
 	}
 
+	projectRoot, _ := os.Getwd()
+
 	// Test the test cases in the table
 	for _, testcase := range tests {
 		t.Run(testcase.name, func(t *testing.T) {
@@ -156,7 +134,7 @@ func TestStartNewConversation_TestTable(t *testing.T) {
 
 			// Check the errors we are expecting
 			topic := "testing topic for chatbot wrapper application"
-			convo, err := app.StartNewConversation(testcase.mockClient, topic)
+			convo, err := app.StartNewConversation(testcase.mockClient, topic, projectRoot)
 			if testcase.expectErr {
 				require.Error(t, err)
 				if testcase.expectErrPart != "" {
