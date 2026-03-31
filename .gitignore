@@ -32,6 +32,7 @@ go.work.sum
 # .vscode/
 
 # application specific ignores
+output.txt
 build/
 .sidebar/
 ui/backend/
