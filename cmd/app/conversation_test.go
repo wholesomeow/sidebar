@@ -12,16 +12,16 @@ import (
 
 // Test Helpers ---------------------------------------------------------------
 
-func setupFakeSidebarEnv(t *testing.T) string {
+func setupFakeArborEnv(t *testing.T) string {
 	t.Helper()
 
 	// Create temp directories for testing
 	tmp := t.TempDir()
-	sidebarDir := filepath.Join(tmp, ".sidebar")
-	conversationsDir := filepath.Join(sidebarDir, "conversations")
+	arborDir := filepath.Join(tmp, ".arbor")
+	conversationsDir := filepath.Join(arborDir, "conversations")
 	templateDir := filepath.Join(tmp, "templates")
 
-	require.NoError(t, os.MkdirAll(sidebarDir, 0755))
+	require.NoError(t, os.MkdirAll(arborDir, 0755))
 	require.NoError(t, os.MkdirAll(conversationsDir, 0755))
 	require.NoError(t, os.MkdirAll(templateDir, 0755))
 
@@ -30,7 +30,7 @@ func setupFakeSidebarEnv(t *testing.T) string {
 	require.NoError(t, os.WriteFile(templateFile, []byte(`{"conversationID":"template"}`), 0644))
 
 	// Fake config file
-	configFile := filepath.Join(sidebarDir, "sidebar-config.yaml")
+	configFile := filepath.Join(arborDir, "arbor-config.yaml")
 	require.NoError(t, os.WriteFile(configFile, []byte("API_KEY: fake-key\nlastConversationID: template\n"), 0644))
 
 	// Change current working dir so relative paths work
@@ -67,7 +67,7 @@ func TestStartNewConversation_TestTable(t *testing.T) {
 		{
 			name: "Happy Path",
 			setup: func(t *testing.T, baseDir string) {
-				setupFakeSidebarEnv(t)
+				setupFakeArborEnv(t)
 			},
 			mockClient: &app.MockClient{
 				MockResponse: &app.MockCompletion,
@@ -83,10 +83,10 @@ func TestStartNewConversation_TestTable(t *testing.T) {
 		{
 			name: "Missing Template File",
 			setup: func(t *testing.T, baseDir string) {
-				sidebar := filepath.Join(baseDir, ".sidebar")
-				require.NoError(t, os.MkdirAll(sidebar, 0755))
+				arbor := filepath.Join(baseDir, ".arbor")
+				require.NoError(t, os.MkdirAll(arbor, 0755))
 				// Note: we do *not* create templates dir, so this should fail
-				configFile := filepath.Join(sidebar, "sidebar-config.yaml")
+				configFile := filepath.Join(arbor, "arbor-config.yaml")
 				require.NoError(t, os.WriteFile(configFile, []byte("API_KEY: fake\n"), 0644))
 			},
 			mockClient:    &app.MockClient{},
@@ -94,7 +94,7 @@ func TestStartNewConversation_TestTable(t *testing.T) {
 			expectErrPart: "no such file or directory",
 		},
 		{
-			name: "Missing .sidebar Dir",
+			name: "Missing .arbor Dir",
 			setup: func(t *testing.T, baseDir string) {
 				// Create only templates
 				require.NoError(t, os.MkdirAll(filepath.Join(baseDir, "templates"), 0755))
@@ -107,7 +107,7 @@ func TestStartNewConversation_TestTable(t *testing.T) {
 		{
 			name: "OpenAI JSON Rrror",
 			setup: func(t *testing.T, baseDir string) {
-				setupFakeSidebarEnv(t)
+				setupFakeArborEnv(t)
 			},
 			mockClient: &app.MockClient{
 				Err: fmt.Errorf("OpenAI error: {\"message\":\"invalid model\",\"type\":\"invalid_request_error\"}"),
@@ -122,7 +122,7 @@ func TestStartNewConversation_TestTable(t *testing.T) {
 		{
 			name: "OpenAI Plain Error",
 			setup: func(t *testing.T, baseDir string) {
-				setupFakeSidebarEnv(t)
+				setupFakeArborEnv(t)
 			},
 			mockClient: &app.MockClient{
 				Err: fmt.Errorf("network timeout"),
@@ -136,7 +136,7 @@ func TestStartNewConversation_TestTable(t *testing.T) {
 		{
 			name: "Validate Main Branch",
 			setup: func(t *testing.T, baseDir string) {
-				setupFakeSidebarEnv(t)
+				setupFakeArborEnv(t)
 			},
 			mockClient: &app.MockClient{
 				MockResponse: &app.MockCompletion,

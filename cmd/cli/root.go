@@ -21,7 +21,7 @@ For help:       arbor help
 Config lives at: `
 
 var rootCmd = &cobra.Command{
-	Use:   "sidebar",
+	Use:   "arbor",
 	Short: "Chat Version Control CLI",
 	Long:  "Manage AI-assisted conversations with sessions, commits, branches, tangents, and exports.",
 	Run: func(cmd *cobra.Command, args []string) {

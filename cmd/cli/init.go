@@ -35,7 +35,7 @@ var sessionInitCmd = &cobra.Command{
 		// Fancy printout for user
 		fmt.Printf(`
 	                *** New Session initiated ***
-*** To respond back to the assistant, use 'sidebar msg "your response"' ***
+*** To respond back to the assistant, use 'arbor msg "your response"' ***
 
     - Conversation ID: %s
     - Seed: %d

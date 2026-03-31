@@ -7,11 +7,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var helpMsg = `sidebar — Chat Version Control CLI
+var helpMsg = `arbor — Chat Version Control CLI
 Manage AI-assisted conversations with sessions, commits, branches, tangents, and exports.
 
 Usage:
-  sidebar <command> [options]
+  arbor <command> [options]
 
 Core Commands:
 
@@ -53,13 +53,13 @@ Core Commands:
     export <conversation-id> <doc-title>   Export a conversation to Markdown
 
 Options:
-  help                                     Show help for sidebar or a specific command
+  help                                     Show help for arbor or a specific command
   version                                  Show version information`
 
 var helpCmd = &cobra.Command{
 	Use:   "help",
-	Short: "displays sidebar help",
-	Long:  "Show help for sidebar or a specific command",
+	Short: "displays arbor help",
+	Long:  "Show help for arbor or a specific command",
 	Run: func(cmd *cobra.Command, args []string) {
 		if _, err := fmt.Fprint(os.Stdout, helpMsg); err != nil {
 			fmt.Fprintf(os.Stderr, "failed to write output: %v\n", err)

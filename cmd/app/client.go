@@ -37,7 +37,7 @@ var goodConvo = []byte(`{
 	"conversationID": "c2edd7c3-25ff-4111-3fd7-a9b8689b30e2",
 	"seed": 0,
 	"name": "",
-	"path": ".sidebar/convo_c2edd7c3-25ff-4111-3fd7-a9b8689b30e2.json",
+	"path": ".arbor/convo_c2edd7c3-25ff-4111-3fd7-a9b8689b30e2.json",
 	"topic": "testing topic for chatbot wrapper application",
 	"timestamp": "2025-10-18T09:37:09.613341168-06:00",
 	"lastMessageID": "ee15d0a7-f9ed-4221-3f79-da427aebaad1",
@@ -80,7 +80,7 @@ var badConvo = []byte(`{
 	"conversationID": "240e07e1-a430-4f77-3fe2-59dc5d7ded98",
 	"seed": 0,
 	"name": "",
-	"path": ".sidebar/convo_c2edd7c3-25ff-4111-3fd7-a9b8689b30e2.json",
+	"path": ".arbor/convo_c2edd7c3-25ff-4111-3fd7-a9b8689b30e2.json",
 	"topic": "testing topic for chatbot wrapper application",
 	"timestamp": "2025-10-18T09:37:09.613341168-06:00",
 	"messages": {

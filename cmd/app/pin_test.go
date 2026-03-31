@@ -21,7 +21,7 @@ func TestPinMessage_TestTable(t *testing.T) {
 		{
 			name: "Pin Message",
 			setup: func(t *testing.T, baseDir string) {
-				setupFakeSidebarEnv(t)
+				setupFakeArborEnv(t)
 			},
 			mockClient: &app.MockClient{
 				MockResponse: &app.MockCompletion,
@@ -36,7 +36,7 @@ func TestPinMessage_TestTable(t *testing.T) {
 		{
 			name: "Unpin Message",
 			setup: func(t *testing.T, baseDir string) {
-				setupFakeSidebarEnv(t)
+				setupFakeArborEnv(t)
 			},
 			mockClient: &app.MockClient{
 				MockResponse: &app.MockCompletion,
@@ -54,7 +54,7 @@ func TestPinMessage_TestTable(t *testing.T) {
 		{
 			name: "Pin Message Archived Convo",
 			setup: func(t *testing.T, baseDir string) {
-				setupFakeSidebarEnv(t)
+				setupFakeArborEnv(t)
 			},
 			mockClient: &app.MockClient{
 				MockResponse: &app.MockCompletion,
@@ -70,7 +70,7 @@ func TestPinMessage_TestTable(t *testing.T) {
 		{
 			name: "Unpin Message Archived Convo",
 			setup: func(t *testing.T, baseDir string) {
-				setupFakeSidebarEnv(t)
+				setupFakeArborEnv(t)
 			},
 			mockClient: &app.MockClient{
 				MockResponse: &app.MockCompletion,

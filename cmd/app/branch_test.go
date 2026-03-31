@@ -28,7 +28,7 @@ func TestBranchConversation_TestTable(t *testing.T) {
 		{
 			name: "Branch Created",
 			setup: func(t *testing.T, baseDir string) {
-				setupFakeSidebarEnv(t)
+				setupFakeArborEnv(t)
 			},
 			mockClient: &app.MockClient{
 				MockResponse: &app.MockCompletion,
@@ -46,7 +46,7 @@ func TestBranchConversation_TestTable(t *testing.T) {
 		{
 			name: "Archive Branch Created",
 			setup: func(t *testing.T, baseDir string) {
-				setupFakeSidebarEnv(t)
+				setupFakeArborEnv(t)
 			},
 			mockClient: &app.MockClient{
 				MockResponse: &app.MockCompletion,
@@ -61,7 +61,7 @@ func TestBranchConversation_TestTable(t *testing.T) {
 		{
 			name: "Delete Branch",
 			setup: func(t *testing.T, baseDir string) {
-				setupFakeSidebarEnv(t)
+				setupFakeArborEnv(t)
 			},
 			mockClient: &app.MockClient{
 				MockResponse: &app.MockCompletion,

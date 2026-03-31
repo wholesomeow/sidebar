@@ -13,8 +13,8 @@ import (
 
 var startServer = &cobra.Command{
 	Use:   "start",
-	Short: "Start the Sidebar backend",
-	Long:  "Starts the Sidebar Gin backend for the Sidebar webapp",
+	Short: "Start the Arbor backend",
+	Long:  "Starts the Arbor Gin backend for the Arbor webapp",
 	Run: func(cmd *cobra.Command, args []string) {
 		projectRoot, _ := cmd.Flags().GetString("project")
 		if projectRoot == "" {

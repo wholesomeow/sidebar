@@ -30,7 +30,7 @@ func TestArchiveConversation_TestTable(t *testing.T) {
 		{
 			name: "Archive Conversation",
 			setup: func(t *testing.T, baseDir string) {
-				setupFakeSidebarEnv(t)
+				setupFakeArborEnv(t)
 			},
 			mockClient: &app.MockClient{
 				MockResponse: &app.MockCompletion,
@@ -44,7 +44,7 @@ func TestArchiveConversation_TestTable(t *testing.T) {
 		{
 			name: "Unarchive Conversation",
 			setup: func(t *testing.T, baseDir string) {
-				setupFakeSidebarEnv(t)
+				setupFakeArborEnv(t)
 			},
 			mockClient: &app.MockClient{
 				MockResponse: &app.MockCompletion,

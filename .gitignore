@@ -34,7 +34,7 @@ go.work.sum
 # application specific ignores
 output.txt
 build/
-.sidebar/
+.arbor/
 ui/backend/
 ui/node_modules/
 ui/dist/

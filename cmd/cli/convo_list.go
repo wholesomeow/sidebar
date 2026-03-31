@@ -17,7 +17,7 @@ var sessionListConversationsCmd = &cobra.Command{
 		if folderPath == "" {
 			exePath, _ := os.Executable()
 			exeDir := filepath.Dir(exePath)
-			folderPath = filepath.Join(exeDir, ".sidebar", "conversations")
+			folderPath = filepath.Join(exeDir, ".arbor", "conversations")
 		}
 
 		conversations, err := app.ListConversations(folderPath)
